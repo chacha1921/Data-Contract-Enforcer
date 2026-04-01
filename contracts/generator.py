@@ -30,11 +30,11 @@ def parse_args() -> argparse.Namespace:
 	)
 	parser.add_argument("--source", required=True, help="Path to the source JSONL file.")
 	parser.add_argument(
-		"--contract-id", required=True, help="Unique identifier for the generated contract."
+		"--contract-id", required=False, help="Unique identifier for the generated contract."
 	)
 	parser.add_argument(
 		"--lineage",
-		required=True,
+		required=False,
 		help="Path to a lineage snapshot file or directory containing snapshots.",
 	)
 	parser.add_argument(
@@ -43,6 +43,15 @@ def parse_args() -> argparse.Namespace:
 		help="Output directory or explicit Bitol YAML file path.",
 	)
 	return parser.parse_args()
+
+
+def default_lineage_path() -> Path:
+	return LINEAGE_INJECTION_PATH
+
+
+def derive_contract_id(source_path: Path) -> str:
+	parts = [source_path.parent.name, source_path.stem]
+	return slugify("_".join(part for part in parts if part))
 
 
 def load_records(source_path: Path) -> list[dict[str, Any]]:
@@ -584,7 +593,7 @@ def resolve_output_paths(output_arg: str, contract_id: str) -> tuple[Path, Path]
 		return output_path, dbt_output_path
 
 	output_path.mkdir(parents=True, exist_ok=True)
-	return output_path / f"{slugify(contract_id)}.bitol.yaml", dbt_output_path
+	return output_path / f"{slugify(contract_id)}.yaml", dbt_output_path
 
 
 def write_yaml(target_path: Path, payload: dict[str, Any]) -> None:
@@ -597,20 +606,21 @@ def write_yaml(target_path: Path, payload: dict[str, Any]) -> None:
 def main() -> None:
 	args = parse_args()
 	source_path = Path(args.source)
-	lineage_path = Path(args.lineage)
+	contract_id = args.contract_id or derive_contract_id(source_path)
+	lineage_path = Path(args.lineage) if args.lineage else default_lineage_path()
 
 	records = load_records(source_path)
 	profiled_frame = flatten_for_profile(records)
 	profiles = profile_dataframe(profiled_frame)
 	downstream_consumers, lineage_snapshot = load_downstream_consumers(lineage_path)
 	injected_downstream, injected_lineage_snapshot = load_injected_downstream(
-		args.contract_id,
+		contract_id,
 		source_path,
 	)
 	all_downstream = deduplicate(downstream_consumers + injected_downstream)
 
 	bitol_contract = build_bitol_contract(
-		contract_id=args.contract_id,
+		contract_id=contract_id,
 		source_path=source_path,
 		profiles=profiles,
 		downstream_consumers=all_downstream,
@@ -618,7 +628,7 @@ def main() -> None:
 		injected_lineage_snapshot=injected_lineage_snapshot,
 	)
 	dbt_schema = build_dbt_schema(bitol_contract, source_path)
-	bitol_path, dbt_path = resolve_output_paths(args.output, args.contract_id)
+	bitol_path, dbt_path = resolve_output_paths(args.output, contract_id)
 
 	write_yaml(bitol_path, bitol_contract)
 	write_yaml(dbt_path, dbt_schema)

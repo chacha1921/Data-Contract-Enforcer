@@ -1,0 +1,231 @@
+dataContractSpecification: 1.1.0
+id: week3_extractions
+info:
+  title: week3_extractions
+  version: 1.0.0
+  description: Auto-generated from extractions.jsonl
+  owner: data-engineering
+lineage:
+  source: outputs/week3/extractions.jsonl
+  lineage_snapshot: lineage_snapshots.jsonl
+  injected_lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  downstream_consumers: &id001
+  - analytics_invoice_quality
+  - dbt_week3_extractions_model
+downstream: *id001
+models:
+- name: week3_extractions
+  type: table
+  fields:
+  - name: batch_id
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - batch-01
+    - batch-02
+    - batch-03
+    - batch-04
+    - batch-05
+    - batch-06
+  - name: doc_id
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+  - name: document_name
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+  - name: document_type
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - invoice
+  - name: extracted_facts__confidence
+    type: number
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: float64
+      min: 0.72
+      max: 0.96
+      mean: 0.841667
+      stddev: 0.061215
+      p25: 0.79
+      p50: 0.84
+      p75: 0.89
+      p95: 0.94
+    minimum: 0.0
+    maximum: 1.0
+  - name: extracted_facts__fact_index
+    type: integer
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: int64
+      min: 0
+      max: 2
+      mean: 1.0
+      stddev: 0.816497
+      p25: 0.0
+      p50: 1.0
+      p75: 2.0
+      p95: 2.0
+    enum:
+    - 0
+    - 1
+    - 2
+    minimum: 0
+    maximum: 2
+  - name: extracted_facts__fact_type
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - invoice_status
+    - invoice_total
+    - vendor_name
+  - name: extracted_facts__value
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: 120.0
+      max: 562.5
+      mean: 341.25
+      stddev: 129.885767
+      p25: 230.625
+      p50: 341.25
+      p75: 451.875
+      p95: 540.375
+  - name: extraction_version
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - v1.0
+  - name: language
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - en
+  - name: processed_at
+    type: timestamp
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+  - name: quality_status
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - ready
+    - review
+  - name: source_system
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - week3_extractions

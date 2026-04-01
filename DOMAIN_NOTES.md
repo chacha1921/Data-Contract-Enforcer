@@ -1,131 +1,41 @@
 # Domain Notes
 
-Use this document as the final write-up for Phase 0. Replace the bracketed prompts with evidence from your own systems, logs, traces, schemas, screenshots, and sample records. The target is **800+ words minimum** across the five sections below.
-
 ## 1. What business or operational problem does this data product solve?
 
-Describe the concrete problem the system solves in your environment.
+This repository solves a practical trust problem in two internal data products: the Week 3 extraction dataset and the Week 5 event dataset. The Week 3 flow represents document-oriented extraction output, where each record is expected to describe a document and the facts extracted from it. The Week 5 flow represents event-stream data, where each record contributes to the history of an aggregate and needs to remain replayable and ordered. In both cases, the operational problem is not just storing JSONL files; it is making sure those files are stable enough to support downstream automation without silent data corruption. The repository addresses that by generating contracts from the data shape, validating incoming records against those contracts, and checking for structural, semantic, and statistical drift over time.
 
-Fill in:
+The evidence for this purpose is visible directly in the code. The migration script in `outputs/migrate/align_data.py` explicitly normalizes Week 3 `doc_id` values and `extracted_facts[].confidence`, and it also repairs Week 5 timestamps and `sequence_number` ordering. That means the system already assumes real downstream breakage can come from malformed identifiers, wrong confidence scale, or out-of-order events. The generator in `contracts/generator.py` profiles source files and emits Bitol plus dbt contracts, which shows that the expected workflow is: align raw outputs, generate contracts, then use those contracts as enforceable expectations. The runner in `contracts/runner.py` then validates required fields, types, UUIDs, numeric ranges, and drift, which confirms the main operational goal is dependable downstream consumption rather than ad hoc inspection.
 
-- **System name:** [Example: Week 3 extraction pipeline / Week 5 event stream]
-- **Primary users:** [Analysts, downstream services, ML pipeline, operations team, etc.]
-- **Decision or workflow supported:** [What people or systems do with the data]
-- **Business risk if the data is wrong or delayed:** [Missed SLA, wrong decisions, broken automation, customer-facing impact]
-
-Write 1-2 paragraphs that answer:
-
-- What is the real-world workflow behind this dataset?
-- Why does this dataset exist?
-- What breaks if it is incomplete, stale, or malformed?
-
-Evidence to include from your repo or systems:
-
-- A concrete example record from `outputs/week3/extractions.jsonl`.
-- A concrete example record from `outputs/week5/events.jsonl`.
-- A short explanation of how those records are consumed downstream.
+From a business perspective, the Week 3 extraction records support workflows that depend on reliable extracted facts, such as analytics, audit review, rule-based automation, or later model features. If a confidence value is stored as `95` instead of `0.95`, downstream logic may treat weak evidence as near certainty. The Week 5 event data supports replay, lineage, and event-order-sensitive consumers. If `recorded_at` precedes `occurred_at`, or if `sequence_number` is inconsistent inside an `aggregate_id`, event reconstruction becomes ambiguous. In both datasets, the risk is that JSON files may still “look valid” at the syntax level while being operationally unsafe. This project exists to convert those latent risks into explicit, checkable rules.
 
 ## 2. What are the key entities, attributes, and identifiers in the domain?
 
-Describe the domain objects represented in the data and why the identifiers matter.
+The core entity in Week 3 is a document extraction record. Based on `outputs/migrate/align_data.py` and `contracts/generator.py`, each record is centered on a document identifier and a collection of extracted facts. The most important identifier is `doc_id`, which the migration script forces into UUIDv4 form. The most important nested attribute is the `extracted_facts` array, especially each fact’s `confidence` value. When the generator flattens records, it specifically explodes `extracted_facts` into row-level facts using keys such as `extracted_facts__fact_index`, which shows that individual extracted facts are analytically important, not just opaque nested blobs.
 
-Cover at least:
+The core entity in Week 5 is an event record tied to an `aggregate_id`. The migration logic shows the most important operational fields are `aggregate_id`, `occurred_at`, `recorded_at`, and `sequence_number`. These are not just descriptive attributes; together they define event identity in context, event ordering, and replay correctness. A useful concrete example from the repository design is that Week 5 data is not accepted as-is even when the fields exist; it is normalized so `recorded_at` is always greater than or equal to `occurred_at`, and `sequence_number` is reassigned to start at `1` and increase within each aggregate stream. That tells us these fields are domain-critical, not optional metadata.
 
-- **Week 3 extraction entity:** [Document, extraction result, extracted fact, source artifact]
-- **Week 5 event entity:** [Aggregate, event, command result, lifecycle transition]
-- **Primary identifiers:** [Examples: `doc_id`, `aggregate_id`, event IDs, UUID fields]
-- **High-value attributes:** [Examples: confidence, timestamps, sequence numbers, status, event type]
-
-Write 1-2 paragraphs that answer:
-
-- What is the core unit of data in each dataset?
-- Which fields identify records uniquely?
-- Which fields are descriptive versus operational versus analytical?
-
-Evidence to include:
-
-- A field-by-field example from one Week 3 record.
-- A field-by-field example from one Week 5 record.
-- A note about why identifier quality matters for joins, lineage, or replay.
+The distinction between descriptive, operational, and analytical attributes is clear in the contract logic. Descriptive fields are things like event type names, source labels, or extracted fact labels when present. Operational fields are identifiers, timestamps, and sequence numbers because they control replay, traceability, and joins. Analytical fields include metrics such as `confidence`, null rates, numeric summaries, and accepted values generated by the contract profiler. Identifier quality matters because it affects every later stage: joins between systems, replay of event streams, lineage reporting, and validation error attribution. If `doc_id` or `aggregate_id` is malformed, later debugging becomes much harder because the data cannot be reliably matched back to a source system or downstream consumer.
 
 ## 3. What data quality rules are critical in this domain?
 
-List the data quality expectations that must hold for the datasets to be trusted.
+The critical rules in this repository fall into three categories. Structural rules ensure the data is present and shaped correctly. `contracts/runner.py` checks for missing required fields and returns `ERROR` instead of crashing if a column is absent. Type rules ensure that a field represented as `number`, `integer`, `string`, `boolean`, or `timestamp` actually behaves that way in the loaded dataset. Format rules add another layer for identifiers, especially UUID validation using the regex `^[0-9a-f-]{36}$`. Range rules are important for numeric stability; the runner validates values against contract `minimum` and `maximum`, and the generator automatically constrains any field with `confidence` in its name to the `0.0-1.0` interval.
 
-You should discuss rules such as:
+The semantic and statistical rules are just as important as structure. In Week 3, the biggest semantic risk is confidence-scale corruption. The migration script already repairs this by dividing values above `1.0` by `100`, and the generated contract preserves that expectation through explicit bounds. In Week 5, the most important semantic rule is temporal and stream consistency: `recorded_at` must not be earlier than `occurred_at`, and `sequence_number` must increase per `aggregate_id`. These rules prevent subtle failures where data is syntactically correct but semantically unsafe for replay or auditing.
 
-- Required fields must be present.
-- UUIDs must be valid where expected.
-- `confidence` must remain in the `0.0-1.0` range.
-- `recorded_at >= occurred_at` for events.
-- `sequence_number` must begin at `1` and increase per `aggregate_id`.
-- Numeric drift in key metrics must be caught before downstream breakage.
-
-Write 1-2 paragraphs that answer:
-
-- Which rules are structural, semantic, and statistical?
-- Which rules are the highest priority and why?
-- Which rules would catch a scale error like `95` instead of `0.95`?
-
-Evidence to include:
-
-- One example of a rule encoded in `contracts/generator.py`.
-- One example of a rule enforced in `contracts/runner.py`.
-- One example of a migration correction performed by `outputs/migrate/align_data.py`.
+The statistical rules catch problems that would slip past type checks. The runner bootstraps `schema_snapshots/baselines.json` on the first real validation run, then compares current means against baseline means for all numeric columns. It emits `WARNING` when drift exceeds `2 * stddev` and `FAIL` with `CRITICAL` severity when it exceeds `3 * stddev`. This is particularly valuable for the confidence field. A dataset with confidence values stored as `88`, `92`, and `97` could still parse as numeric, but the mean would diverge sharply from a baseline near `0.8` or `0.9`. That is exactly the kind of quality failure that a contract plus drift policy is supposed to catch.
 
 ## 4. Who are the producers and consumers of this data, and how does lineage matter?
 
-Explain where the data comes from and where it goes next.
+The producers in this repository are the upstream systems that create Week 3 extraction outputs and Week 5 event outputs. Even though the raw source applications are not fully documented here, the repository itself makes the producer assumptions explicit. Week 3 producers emit document-centered JSONL with `doc_id` and `extracted_facts`, while Week 5 producers emit event JSONL with `aggregate_id`, timestamps, and sequence numbers. The migration script acts as a bridge between imperfect producer output and submission-ready datasets, which means the repository treats producer variability as expected rather than exceptional.
 
-Cover:
+The direct consumers are also visible in the repo. `contracts/generator.py` consumes the normalized JSONL files to emit Bitol-compatible contracts and dbt schema files. `contracts/runner.py` consumes both the generated contract and the dataset to produce machine-readable validation reports. dbt is a downstream consumer because the generator creates `_dbt.yml` files with `not_null` and `accepted_values` tests derived from the Bitol contract. Analytics users, quality reviewers, and anyone responsible for schema governance are also implied consumers because the generated YAML and validation reports are designed to be reviewed and versioned.
 
-- **Producers:** [Original application, extractor, event producer, upstream pipeline]
-- **Consumers:** [Validation runner, analytics consumers, dbt models, dashboards, ML features, audit workflows]
-- **Lineage relevance:** [Why downstream awareness matters for contracts and change management]
-
-Write 1-2 paragraphs that answer:
-
-- What system creates the data?
-- What systems or people rely on it later?
-- Why is downstream lineage included in the generated Bitol contract?
-
-Evidence to include:
-
-- A short explanation of how `outputs/week4/lineage_snapshots.jsonl` informs downstream contract metadata.
-- A concrete list of likely downstream consumers for Week 3 and Week 5 data.
-- A note on how dbt schema tests support downstream trust.
+Lineage matters because a contract is more useful when it states not only what a dataset looks like, but also who is affected when it changes. The generator includes lineage injection from `outputs/week4/lineage_snapshots.jsonl` by reading the latest line, finding edges whose source matches the current system identifiers, and listing the target nodes as downstream consumers in the contract. That design is important even if the current repository does not yet contain a populated Week 4 lineage file. It shows that the contract is meant to communicate impact, not just schema. If a confidence rule changes or an accepted value list changes, the downstream section tells maintainers which nodes, teams, or transformations are most likely to be affected. The dbt schema output reinforces this by converting required fields and enums into automated tests, which gives downstream consumers a consistent enforcement layer in analytical workflows.
 
 ## 5. What are the main failure modes, changes, and governance concerns in this domain?
 
-Describe the real risks you expect over time and how contracts help manage them.
+The most likely failure mode is schema drift from upstream JSON changes. Week 3 data may gain or lose nested extraction fields, while Week 5 event data may add optional attributes or silently shift event ordering semantics. Another high-risk change is unit or scale drift. Confidence values are a concrete example: the same field can remain numeric while changing from a probability scale (`0.0-1.0`) to a percentage scale (`0-100`). Without contract constraints and drift checks, that error would look valid to a parser while still being dangerous to downstream consumers. Identifier degradation is another likely issue. If `doc_id` is missing or malformed, joins and traceability degrade immediately. If `aggregate_id` is present but sequence ordering is inconsistent, replay logic becomes unreliable even though the dataset still “loads.”
 
-Discuss areas such as:
+The easiest failures to miss are the ones that preserve syntax. A JSONL file can remain valid while carrying wrong semantics. That is why this repository uses multiple governance layers rather than a single parser. The migration step repairs known upstream problems before contract generation. The generator profiles the aligned data and turns observed expectations into Bitol-compatible YAML and dbt tests. The runner validates structure, type, range, UUID format, and drift. The preflight checker finally verifies that the repository contains the expected contracts, reports, datasets, and domain documentation before submission. Together these layers create a governance loop: normalize, describe, validate, and verify.
 
-- Schema drift from upstream changes.
-- Confidence scale drift (`0-1` vs `0-100`).
-- Missing IDs or malformed UUIDs.
-- Event ordering and replay errors.
-- Incomplete migrations or null inflation.
-- Silent changes to enums or accepted values.
-
-Write 2-3 paragraphs that answer:
-
-- Which changes are most likely over time?
-- Which failures are easiest to miss without contracts?
-- How do contract generation, migration, validation, and drift checks work together as governance controls?
-
-Evidence to include:
-
-- A concrete example of a failure your validator would catch.
-- A concrete example of a failure your migration script would repair before generation.
-- A concrete example of a drift threshold that would trigger `WARNING` or `CRITICAL` severity.
-
-## Final Evidence Checklist
-
-Before submitting, confirm this document includes:
-
-- At least **800 words** total.
-- Evidence from your own files and outputs, not hypothetical examples only.
-- Explicit references to Week 3 extractions and Week 5 events.
-- At least one mention each of contract generation, validation, migration, and drift detection.
-- Concrete examples of identifiers, constraints, and downstream consumers.
+There are concrete examples for each layer in the codebase. A failure the validator would catch is a `confidence` column with values outside the contract range or a missing required field in a generated contract. A failure the migration script would repair is a Week 5 record where `recorded_at` is earlier than `occurred_at`, or a Week 3 record where `doc_id` is not a UUIDv4. A drift threshold example is already encoded in `contracts/runner.py`: if a numeric column’s current mean deviates from the baseline by more than two standard deviations, the report emits `WARNING`; if the deviation exceeds three standard deviations, it emits `FAIL` with `CRITICAL` severity. That policy is strong enough to surface a confidence-scale regression even if all rows are still technically numeric. In governance terms, that is the main value of this repository: it turns common data quality failure modes into versioned, testable, and reviewable controls.

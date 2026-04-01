@@ -17,6 +17,7 @@ from contracts.generator import flatten_for_profile, load_records
 UUID_PATTERN = re.compile(r"^[0-9a-f-]{36}$")
 NUMERIC_TYPES = {"number", "integer"}
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BASELINE_PATH = PROJECT_ROOT / "schema_snapshots" / "baselines.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -61,18 +62,30 @@ def make_result(
 	failing_count: int,
 	message: str,
 	*,
+	severity: str | None = None,
 	metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
 	result = {
 		"check": check_name,
 		"field": field_name,
 		"status": status,
+		"severity": severity or derive_severity(status),
 		"failing_record_count": int(failing_count),
 		"message": message,
 	}
 	if metadata:
 		result["metadata"] = metadata
 	return result
+
+
+def derive_severity(status: str) -> str:
+	mapping = {
+		"PASS": "INFO",
+		"WARNING": "WARNING",
+		"FAIL": "ERROR",
+		"ERROR": "ERROR",
+	}
+	return mapping.get(status, "INFO")
 
 
 def is_missing(value: Any) -> bool:
@@ -224,12 +237,56 @@ def validate_numeric_range(frame: pd.DataFrame, field: dict[str, Any]) -> dict[s
 
 
 def load_baselines() -> dict[str, dict[str, Any]]:
-	baseline_path = PROJECT_ROOT / "schema_snapshots" / "baselines.json"
-	if not baseline_path.exists():
+	if not BASELINE_PATH.exists():
 		return {}
 
-	payload = json.loads(baseline_path.read_text(encoding="utf-8"))
+	payload = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
 	return normalize_baselines(payload)
+
+
+def round_metric(value: float | None) -> float | None:
+	if value is None or pd.isna(value):
+		return None
+	return round(float(value), 6)
+
+
+def numeric_column_names(frame: pd.DataFrame) -> list[str]:
+	numeric_columns: list[str] = []
+	for column in frame.columns:
+		series = pd.to_numeric(frame[column], errors="coerce")
+		if series.notna().any():
+			numeric_columns.append(str(column))
+	return sorted(numeric_columns)
+
+
+def build_baselines(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
+	baselines: dict[str, dict[str, Any]] = {}
+	for column in numeric_column_names(frame):
+		numeric_series = pd.to_numeric(frame[column], errors="coerce").dropna()
+		if numeric_series.empty:
+			continue
+		baselines[column] = {
+			"mean": round_metric(float(numeric_series.mean())),
+			"stddev": round_metric(float(numeric_series.std(ddof=0))),
+			"row_count": int(len(numeric_series.index)),
+		}
+	return baselines
+
+
+def save_baselines(baselines: dict[str, dict[str, Any]]) -> None:
+	BASELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
+	payload = {"columns": baselines, "created_at": datetime.now(timezone.utc).isoformat()}
+	BASELINE_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def load_or_initialize_baselines(frame: pd.DataFrame) -> tuple[dict[str, dict[str, Any]], bool]:
+	baselines = load_baselines()
+	if baselines:
+		return baselines, False
+
+	baselines = build_baselines(frame)
+	save_baselines(baselines)
+	return baselines, True
 
 
 def normalize_baselines(payload: Any) -> dict[str, dict[str, Any]]:
@@ -263,10 +320,9 @@ def extract_baseline_metric(baseline_entry: dict[str, Any], metric_name: str) ->
 
 def validate_statistical_drift(
 	frame: pd.DataFrame,
-	field: dict[str, Any],
+	field_name: str,
 	baselines: dict[str, dict[str, Any]],
 ) -> dict[str, Any] | None:
-	field_name = str(field["name"])
 	baseline_entry = baselines.get(field_name)
 	if baseline_entry is None:
 		return None
@@ -300,25 +356,37 @@ def validate_statistical_drift(
 		)
 
 	drift = abs(current_mean - baseline_mean)
-	threshold = 3 * baseline_stddev
-	status = "FAIL" if drift > threshold else "PASS"
-	message = (
-		"Current mean is within the baseline drift threshold."
-		if status == "PASS"
-		else "Current mean exceeds the baseline drift threshold."
-	)
+	warning_threshold = 2 * baseline_stddev
+	critical_threshold = 3 * baseline_stddev
+	if drift > critical_threshold:
+		status = "FAIL"
+		severity = "CRITICAL"
+		message = "Current mean exceeds the critical drift threshold."
+		failing_count = int(len(current_series.index))
+	elif drift > warning_threshold:
+		status = "WARNING"
+		severity = "WARNING"
+		message = "Current mean exceeds the warning drift threshold."
+		failing_count = int(len(current_series.index))
+	else:
+		status = "PASS"
+		severity = "INFO"
+		message = "Current mean is within the baseline drift thresholds."
+		failing_count = 0
 	return make_result(
 		"drift.mean_vs_baseline",
 		field_name,
 		status,
-		int(len(current_series.index)) if status == "FAIL" else 0,
+		failing_count,
 		message,
+		severity=severity,
 		metadata={
 			"baseline_mean": baseline_mean,
 			"baseline_stddev": baseline_stddev,
 			"current_mean": round(current_mean, 6),
 			"drift": round(drift, 6),
-			"threshold": round(threshold, 6),
+			"warning_threshold": round(warning_threshold, 6),
+			"critical_threshold": round(critical_threshold, 6),
 		},
 	)
 
@@ -326,7 +394,21 @@ def validate_statistical_drift(
 def validate_contract(contract: dict[str, Any], frame: pd.DataFrame) -> list[dict[str, Any]]:
 	results: list[dict[str, Any]] = []
 	fields = extract_fields(contract)
-	baselines = load_baselines()
+	baselines, baselines_initialized = load_or_initialize_baselines(frame)
+	contract_field_names = {str(field["name"]) for field in fields}
+	numeric_fields = sorted(set(numeric_column_names(frame)) | (set(baselines.keys()) & contract_field_names) | set(baselines.keys()))
+
+	if baselines_initialized:
+		results.append(
+			make_result(
+				"drift.baseline_initialized",
+				"*",
+				"PASS",
+				0,
+				"Created schema_snapshots/baselines.json from current numeric columns.",
+				metadata={"baseline_path": str(BASELINE_PATH), "column_count": len(baselines)},
+			)
+		)
 
 	for field in fields:
 		if field.get("required"):
@@ -340,7 +422,8 @@ def validate_contract(contract: dict[str, Any], frame: pd.DataFrame) -> list[dic
 		if field.get("type") in NUMERIC_TYPES or field.get("minimum") is not None or field.get("maximum") is not None:
 			results.append(validate_numeric_range(frame, field))
 
-		drift_result = validate_statistical_drift(frame, field, baselines)
+	for field_name in numeric_fields:
+		drift_result = validate_statistical_drift(frame, field_name, baselines)
 		if drift_result is not None:
 			results.append(drift_result)
 

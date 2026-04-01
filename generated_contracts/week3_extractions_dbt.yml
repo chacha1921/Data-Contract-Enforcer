@@ -3,42 +3,42 @@ models:
 - name: week3_extractions
   description: Generated schema contract for week3_extractions
   columns:
-  - name: batch_id
+  - name: block_id
+    description: Auto-generated from extractions.jsonl
+    data_type: string
+    tests:
+    - not_null
+  - name: block_type
     description: Auto-generated from extractions.jsonl
     data_type: string
     tests:
     - not_null
     - accepted_values:
         values:
-        - batch-01
-        - batch-02
-        - batch-03
-        - batch-04
-        - batch-05
-        - batch-06
+        - text
   - name: doc_id
     description: Auto-generated from extractions.jsonl
     data_type: string
     tests:
     - not_null
-  - name: document_name
-    description: Auto-generated from extractions.jsonl
-    data_type: string
-    tests:
-    - not_null
-  - name: document_type
+  - name: domain_hint
     description: Auto-generated from extractions.jsonl
     data_type: string
     tests:
     - not_null
     - accepted_values:
         values:
-        - invoice
+        - financial
+        - general
   - name: extracted_facts__confidence
     description: Auto-generated from extractions.jsonl
     data_type: number
     tests:
     - not_null
+    - accepted_values:
+        values:
+        - 0.9
+        - 0.95
   - name: extracted_facts__fact_index
     description: Auto-generated from extractions.jsonl
     data_type: integer
@@ -47,8 +47,6 @@ models:
     - accepted_values:
         values:
         - 0
-        - 1
-        - 2
   - name: extracted_facts__fact_type
     description: Auto-generated from extractions.jsonl
     data_type: string
@@ -56,22 +54,12 @@ models:
     - not_null
     - accepted_values:
         values:
-        - invoice_status
-        - invoice_total
-        - vendor_name
+        - text_block
   - name: extracted_facts__value
     description: Auto-generated from extractions.jsonl
     data_type: string
     tests:
     - not_null
-  - name: extraction_version
-    description: Auto-generated from extractions.jsonl
-    data_type: string
-    tests:
-    - not_null
-    - accepted_values:
-        values:
-        - v1.0
   - name: language
     description: Auto-generated from extractions.jsonl
     data_type: string
@@ -79,26 +67,91 @@ models:
     - not_null
     - accepted_values:
         values:
+        - am
         - en
+  - name: language_confidence
+    description: Auto-generated from extractions.jsonl
+    data_type: number
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - 0.9
+        - 1.0
+  - name: layout_complexity
+    description: Auto-generated from extractions.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - single_column
+        - table_heavy
+  - name: origin_type
+    description: Auto-generated from extractions.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - native_digital
+        - scanned_image
+  - name: page_number
+    description: Auto-generated from extractions.jsonl
+    data_type: integer
+    tests:
+    - not_null
   - name: processed_at
     description: Auto-generated from extractions.jsonl
     data_type: timestamp
     tests:
     - not_null
-  - name: quality_status
+    - accepted_values:
+        values:
+        - '2026-03-07T20:02:37.191264'
+        - '2026-03-08T02:29:56.247097'
+  - name: processing_time_seconds
+    description: Auto-generated from extractions.jsonl
+    data_type: number
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - 38.539
+        - 63.7209
+  - name: source_doc_id
     description: Auto-generated from extractions.jsonl
     data_type: string
     tests:
     - not_null
     - accepted_values:
         values:
-        - ready
-        - review
-  - name: source_system
+        - 2013-E.C-Audit-finding-information
+        - tax_expenditure_ethiopia_2021_22
+  - name: status
     description: Auto-generated from extractions.jsonl
     data_type: string
     tests:
     - not_null
     - accepted_values:
         values:
-        - week3_extractions
+        - success
+  - name: strategy_used
+    description: Auto-generated from extractions.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - layout
+        - vision
+  - name: text_length
+    description: Auto-generated from extractions.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: text_preview
+    description: Auto-generated from extractions.jsonl
+    data_type: string
+    tests:
+    - not_null

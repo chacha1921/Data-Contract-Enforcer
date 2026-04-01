@@ -17,7 +17,21 @@ models:
 - name: week3_extractions
   type: table
   fields:
-  - name: batch_id
+  - name: block_id
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+  - name: block_type
     type: string
     required: true
     metrics:
@@ -32,12 +46,7 @@ models:
       p75: null
       p95: null
     enum:
-    - batch-01
-    - batch-02
-    - batch-03
-    - batch-04
-    - batch-05
-    - batch-06
+    - text
   - name: doc_id
     type: string
     required: true
@@ -52,21 +61,7 @@ models:
       p50: null
       p75: null
       p95: null
-  - name: document_name
-    type: string
-    required: true
-    metrics:
-      null_fraction: 0.0
-      dtype: object
-      min: null
-      max: null
-      mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
-      p95: null
-  - name: document_type
+  - name: domain_hint
     type: string
     required: true
     metrics:
@@ -81,21 +76,25 @@ models:
       p75: null
       p95: null
     enum:
-    - invoice
+    - financial
+    - general
   - name: extracted_facts__confidence
     type: number
     required: true
     metrics:
       null_fraction: 0.0
       dtype: float64
-      min: 0.72
-      max: 0.96
-      mean: 0.841667
-      stddev: 0.061215
-      p25: 0.79
-      p50: 0.84
-      p75: 0.89
-      p95: 0.94
+      min: 0.9
+      max: 0.95
+      mean: 0.90023
+      stddev: 0.003384
+      p25: 0.9
+      p50: 0.9
+      p75: 0.9
+      p95: 0.9
+    enum:
+    - 0.9
+    - 0.95
     minimum: 0.0
     maximum: 1.0
   - name: extracted_facts__fact_index
@@ -105,19 +104,17 @@ models:
       null_fraction: 0.0
       dtype: int64
       min: 0
-      max: 2
-      mean: 1.0
-      stddev: 0.816497
+      max: 0
+      mean: 0.0
+      stddev: 0.0
       p25: 0.0
-      p50: 1.0
-      p75: 2.0
-      p95: 2.0
+      p50: 0.0
+      p75: 0.0
+      p95: 0.0
     enum:
     - 0
-    - 1
-    - 2
     minimum: 0
-    maximum: 2
+    maximum: 0
   - name: extracted_facts__fact_type
     type: string
     required: true
@@ -133,39 +130,21 @@ models:
       p75: null
       p95: null
     enum:
-    - invoice_status
-    - invoice_total
-    - vendor_name
+    - text_block
   - name: extracted_facts__value
     type: string
     required: true
     metrics:
       null_fraction: 0.0
       dtype: object
-      min: 120.0
-      max: 562.5
-      mean: 341.25
-      stddev: 129.885767
-      p25: 230.625
-      p50: 341.25
-      p75: 451.875
-      p95: 540.375
-  - name: extraction_version
-    type: string
-    required: true
-    metrics:
-      null_fraction: 0.0
-      dtype: object
-      min: null
-      max: null
-      mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
-      p95: null
-    enum:
-    - v1.0
+      min: -3.0
+      max: 140.0
+      mean: 33.859551
+      stddev: 33.742747
+      p25: 10.0
+      p50: 25.0
+      p75: 50.0
+      p95: 112.0
   - name: language
     type: string
     required: true
@@ -181,7 +160,77 @@ models:
       p75: null
       p95: null
     enum:
+    - am
     - en
+  - name: language_confidence
+    type: number
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: float64
+      min: 0.9
+      max: 1.0
+      mean: 0.99954
+      stddev: 0.006768
+      p25: 1.0
+      p50: 1.0
+      p75: 1.0
+      p95: 1.0
+    enum:
+    - 0.9
+    - 1.0
+    minimum: 0.0
+    maximum: 1.0
+  - name: layout_complexity
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - single_column
+    - table_heavy
+  - name: origin_type
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - native_digital
+    - scanned_image
+  - name: page_number
+    type: integer
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: int64
+      min: 1
+      max: 60
+      mean: 29.455521
+      stddev: 15.604767
+      p25: 16.0
+      p50: 29.0
+      p75: 44.0
+      p95: 56.45
+    minimum: 1
+    maximum: 60
   - name: processed_at
     type: timestamp
     required: true
@@ -196,7 +245,29 @@ models:
       p50: null
       p75: null
       p95: null
-  - name: quality_status
+    enum:
+    - '2026-03-07T20:02:37.191264'
+    - '2026-03-08T02:29:56.247097'
+  - name: processing_time_seconds
+    type: number
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: float64
+      min: 38.539
+      max: 63.7209
+      mean: 38.654868
+      stddev: 1.704213
+      p25: 38.539
+      p50: 38.539
+      p75: 38.539
+      p95: 38.539
+    enum:
+    - 38.539
+    - 63.7209
+    minimum: 38.539
+    maximum: 63.7209
+  - name: source_doc_id
     type: string
     required: true
     metrics:
@@ -211,9 +282,9 @@ models:
       p75: null
       p95: null
     enum:
-    - ready
-    - review
-  - name: source_system
+    - 2013-E.C-Audit-finding-information
+    - tax_expenditure_ethiopia_2021_22
+  - name: status
     type: string
     required: true
     metrics:
@@ -228,4 +299,51 @@ models:
       p75: null
       p95: null
     enum:
-    - week3_extractions
+    - success
+  - name: strategy_used
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: null
+      max: null
+      mean: null
+      stddev: null
+      p25: null
+      p50: null
+      p75: null
+      p95: null
+    enum:
+    - layout
+    - vision
+  - name: text_length
+    type: integer
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: int64
+      min: 1
+      max: 1035
+      mean: 121.084356
+      stddev: 186.995023
+      p25: 7.0
+      p50: 51.0
+      p75: 120.5
+      p95: 581.85
+    minimum: 1
+    maximum: 1035
+  - name: text_preview
+    type: string
+    required: true
+    metrics:
+      null_fraction: 0.0
+      dtype: object
+      min: -3.0
+      max: 140.0
+      mean: 33.859551
+      stddev: 33.742747
+      p25: 10.0
+      p50: 25.0
+      p75: 50.0
+      p95: 112.0

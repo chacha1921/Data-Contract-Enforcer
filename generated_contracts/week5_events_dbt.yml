@@ -3,40 +3,11 @@ models:
 - name: week5_events
   description: Generated schema contract for week5_events
   columns:
-  - name: account_id
-    description: Auto-generated from events.jsonl
-    data_type: string
-    tests:
-    - not_null
-    - accepted_values:
-        values:
-        - acct-001
-        - acct-002
-        - acct-003
-        - acct-004
-        - acct-005
-        - acct-006
-        - acct-007
-        - acct-008
-        - acct-009
-        - acct-010
   - name: aggregate_id
     description: Auto-generated from events.jsonl
     data_type: string
     tests:
     - not_null
-    - accepted_values:
-        values:
-        - 2944af9c-2381-42c8-b537-413a5274b846
-        - 3154c110-f5da-4b8f-a430-8f6b4c41da64
-        - 71153d01-72af-4ad6-b514-826076f0b92c
-        - 741b08c0-ba98-4778-9940-037ce062a577
-        - 9e13537c-2c61-4564-affd-7b45b92a0dac
-        - a62284e1-cbb3-4c7d-8901-16299f09ebfd
-        - be369c74-abe0-4ac7-ac16-cba384bf5b0a
-        - c8e8d78f-ca6d-49d6-b7f6-040d0c6a6571
-        - ebb90f5f-705c-4b53-a98d-d19f577cc26a
-        - fc412c3f-712f-4388-ae40-c3aa02abf75f
   - name: aggregate_type
     description: Auto-generated from events.jsonl
     data_type: string
@@ -44,12 +15,38 @@ models:
     - not_null
     - accepted_values:
         values:
-        - order
-  - name: amount
+        - agent
+        - compliance
+        - credit
+        - docpkg
+        - fraud
+        - loan
+  - name: applicant_id
     description: Auto-generated from events.jsonl
-    data_type: number
+    data_type: string
+  - name: application_id
+    description: Auto-generated from events.jsonl
+    data_type: string
+  - name: document_format
+    description: Auto-generated from events.jsonl
+    data_type: string
     tests:
-    - not_null
+    - accepted_values:
+        values:
+        - pdf
+        - xlsx
+  - name: document_id
+    description: Auto-generated from events.jsonl
+    data_type: string
+  - name: document_type
+    description: Auto-generated from events.jsonl
+    data_type: string
+    tests:
+    - accepted_values:
+        values:
+        - application_proposal
+        - balance_sheet
+        - income_statement
   - name: event_id
     description: Auto-generated from events.jsonl
     data_type: string
@@ -60,25 +57,7 @@ models:
     data_type: string
     tests:
     - not_null
-    - accepted_values:
-        values:
-        - order_closed
-        - order_created
-        - order_validated
-        - payment_authorized
-        - shipment_confirmed
-        - shipment_requested
-  - name: occurred_at
-    description: Auto-generated from events.jsonl
-    data_type: timestamp
-    tests:
-    - not_null
-  - name: recorded_at
-    description: Auto-generated from events.jsonl
-    data_type: timestamp
-    tests:
-    - not_null
-  - name: sequence_number
+  - name: event_version
     description: Auto-generated from events.jsonl
     data_type: integer
     tests:
@@ -87,10 +66,39 @@ models:
         values:
         - 1
         - 2
-        - 3
-        - 4
-        - 5
-        - 6
+  - name: loan_purpose
+    description: Auto-generated from events.jsonl
+    data_type: string
+    tests:
+    - accepted_values:
+        values:
+        - acquisition
+        - equipment_financing
+        - expansion
+        - real_estate
+        - refinancing
+        - working_capital
+  - name: occurred_at
+    description: Auto-generated from events.jsonl
+    data_type: timestamp
+    tests:
+    - not_null
+  - name: package_id
+    description: Auto-generated from events.jsonl
+    data_type: string
+  - name: recorded_at
+    description: Auto-generated from events.jsonl
+    data_type: timestamp
+    tests:
+    - not_null
+  - name: requested_amount_usd
+    description: Auto-generated from events.jsonl
+    data_type: number
+  - name: sequence_number
+    description: Auto-generated from events.jsonl
+    data_type: integer
+    tests:
+    - not_null
   - name: source_system
     description: Auto-generated from events.jsonl
     data_type: string
@@ -99,12 +107,13 @@ models:
     - accepted_values:
         values:
         - week5_events
-  - name: status
+  - name: submission_channel
     description: Auto-generated from events.jsonl
     data_type: string
     tests:
-    - not_null
     - accepted_values:
         values:
-        - completed
-        - in_progress
+        - agent
+        - branch
+        - mobile
+        - web

@@ -14,6 +14,20 @@ It includes:
 - a migration script for aligning Week 3 and Week 5 data to the expected schema
 - a preflight checker that audits the repository against the Thursday submission requirements
 
+## Current Data Sources
+
+The current submission outputs are sourced from the real repository data stored under `repos/`:
+
+- Week 3 outputs are built from `repos/week3/.refinery/extraction_ledger.jsonl`, `repos/week3/.refinery/extracted/`, and `repos/week3/.refinery/profiles/`
+- Week 5 outputs are built from `repos/week5/data/seed_events.jsonl`
+
+The repo-backed submission outputs were rebuilt into:
+
+- `outputs/week3/extractions.jsonl`
+- `outputs/week5/events.jsonl`
+
+using `outputs/migrate/build_real_submission_data.py` and then normalized with `outputs/migrate/align_data.py` before contract generation and validation.
+
 ## Repository Layout
 
 ```text

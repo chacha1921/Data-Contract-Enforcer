@@ -1,0 +1,509 @@
+{
+  "report_id": "cd04520a-44e8-4814-bb20-34b118c1f503",
+  "timestamp": "2026-04-01T23:18:11.473473+00:00",
+  "contract_path": "generated_contracts/week3_extractions.yaml",
+  "data_path": "outputs/week3/extractions.jsonl",
+  "total_checks": 49,
+  "results": [
+    {
+      "check": "structural.required",
+      "field": "block_id",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "block_id",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "block_type",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "block_type",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "doc_id",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "doc_id",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "domain_hint",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "domain_hint",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "extracted_facts__confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "extracted_facts__confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "number"
+      }
+    },
+    {
+      "check": "range.numeric",
+      "field": "extracted_facts__confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "All numeric values are within the contract range.",
+      "metadata": {
+        "minimum": 0.0,
+        "maximum": 1.0
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "extracted_facts__fact_index",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "extracted_facts__fact_index",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "integer"
+      }
+    },
+    {
+      "check": "range.numeric",
+      "field": "extracted_facts__fact_index",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "All numeric values are within the contract range.",
+      "metadata": {
+        "minimum": 0,
+        "maximum": 0
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "extracted_facts__fact_type",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "extracted_facts__fact_type",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "extracted_facts__value",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "extracted_facts__value",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "language",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "language",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "language_confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "language_confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "number"
+      }
+    },
+    {
+      "check": "range.numeric",
+      "field": "language_confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "All numeric values are within the contract range.",
+      "metadata": {
+        "minimum": 0.0,
+        "maximum": 1.0
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "layout_complexity",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "layout_complexity",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "origin_type",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "origin_type",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "page_number",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "page_number",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "integer"
+      }
+    },
+    {
+      "check": "range.numeric",
+      "field": "page_number",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "All numeric values are within the contract range.",
+      "metadata": {
+        "minimum": 1,
+        "maximum": 60
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "processed_at",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "processed_at",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "timestamp"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "processing_time_seconds",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "processing_time_seconds",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "number"
+      }
+    },
+    {
+      "check": "range.numeric",
+      "field": "processing_time_seconds",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "All numeric values are within the contract range.",
+      "metadata": {
+        "minimum": 38.539,
+        "maximum": 63.7209
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "source_doc_id",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "source_doc_id",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "status",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "status",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "strategy_used",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "strategy_used",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "text_length",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "text_length",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "integer"
+      }
+    },
+    {
+      "check": "range.numeric",
+      "field": "text_length",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "All numeric values are within the contract range.",
+      "metadata": {
+        "minimum": 1,
+        "maximum": 1035
+      }
+    },
+    {
+      "check": "structural.required",
+      "field": "text_preview",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Required field is present for all records."
+    },
+    {
+      "check": "type.match",
+      "field": "text_preview",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Observed values match the contract type.",
+      "metadata": {
+        "expected_type": "string"
+      }
+    },
+    {
+      "check": "drift.mean_vs_baseline",
+      "field": "extracted_facts__confidence",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Current mean is within the baseline drift thresholds.",
+      "metadata": {
+        "baseline_mean": 0.841667,
+        "baseline_stddev": 0.061215,
+        "current_mean": 0.90023,
+        "drift": 0.058563,
+        "warning_threshold": 0.12243,
+        "critical_threshold": 0.183645
+      }
+    },
+    {
+      "check": "drift.mean_vs_baseline",
+      "field": "extracted_facts__fact_index",
+      "status": "PASS",
+      "severity": "INFO",
+      "failing_record_count": 0,
+      "message": "Current mean is within the baseline drift thresholds.",
+      "metadata": {
+        "baseline_mean": 1.0,
+        "baseline_stddev": 0.816497,
+        "current_mean": 0.0,
+        "drift": 1.0,
+        "warning_threshold": 1.632994,
+        "critical_threshold": 2.449491
+      }
+    },
+    {
+      "check": "drift.mean_vs_baseline",
+      "field": "extracted_facts__value",
+      "status": "WARNING",
+      "severity": "WARNING",
+      "failing_record_count": 89,
+      "message": "Current mean exceeds the warning drift threshold.",
+      "metadata": {
+        "baseline_mean": 341.25,
+        "baseline_stddev": 129.885767,
+        "current_mean": 33.859551,
+        "drift": 307.390449,
+        "warning_threshold": 259.771534,
+        "critical_threshold": 389.657301
+      }
+    }
+  ]
+}

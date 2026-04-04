@@ -2,8 +2,10 @@
 
 Data-Contract-Enforcer is a small data quality project for generating, validating, and preflighting Bitol-compatible data contracts from JSONL datasets.
 
-The repository focuses on two submission datasets:
+The repository focuses on four submission datasets:
 
+- Week 1 intent records in `outputs/week1/intent_records.jsonl`
+- Week 2 verdict records in `outputs/week2/verdicts.jsonl`
 - Week 3 document extractions in `outputs/week3/extractions.jsonl`
 - Week 5 event records in `outputs/week5/events.jsonl`
 
@@ -11,18 +13,22 @@ It includes:
 
 - a contract generator that profiles source data and emits Bitol + dbt YAML
 - a validation runner that checks structure, types, ranges, UUIDs, and drift
-- a migration script for aligning Week 3 and Week 5 data to the expected schema
+- a migration script for rebuilding Week 1-5 submission data from repo-backed sources
 - a preflight checker that audits the repository against the Thursday submission requirements
 
 ## Current Data Sources
 
 The current submission outputs are sourced from the real repository data stored under `repos/`:
 
+- Week 1 outputs are built from `repos/week1/.orchestration/active_intents.yaml` and `repos/week1/.orchestration/agent_trace.jsonl`
+- Week 2 outputs are built from `repos/week2/rubric.json`, `repos/week2/src/state.py`, and related Week 2 audit source files
 - Week 3 outputs are built from `repos/week3/.refinery/extraction_ledger.jsonl`, `repos/week3/.refinery/extracted/`, and `repos/week3/.refinery/profiles/`
 - Week 5 outputs are built from `repos/week5/data/seed_events.jsonl`
 
 The repo-backed submission outputs were rebuilt into:
 
+- `outputs/week1/intent_records.jsonl`
+- `outputs/week2/verdicts.jsonl`
 - `outputs/week3/extractions.jsonl`
 - `outputs/week5/events.jsonl`
 
@@ -37,6 +43,10 @@ contracts/
 outputs/
 	migrate/
 		align_data.py       Normalize Week 3 and Week 5 source files
+	week1/
+		intent_records.jsonl Week 1 intent dataset
+	week2/
+		verdicts.jsonl      Week 2 verdict dataset
 	week3/
 		extractions.jsonl   Week 3 extraction dataset
 	week5/

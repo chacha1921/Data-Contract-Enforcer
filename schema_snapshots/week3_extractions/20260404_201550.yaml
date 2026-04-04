@@ -29,8 +29,8 @@ models:
   - name: block_id
     type: string
     required: true
-    description: 'Identifier for the extracted page block or OCR segment. Sample values:
-      vision_text_1, vision_text_2, vision_text_3.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      652.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -41,11 +41,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: block_type
     type: string
     required: true
-    description: 'Block classification emitted by the extraction pipeline. Sample
-      values: text.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -61,8 +62,8 @@ models:
   - name: doc_id
     type: string
     required: true
-    description: 'Document identifier for the extracted source document. Sample values:
-      2013-E.C-Audit-finding-information, tax_expenditure_ethiopia_2021_22.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -76,11 +77,12 @@ models:
     enum:
     - 2013-E.C-Audit-finding-information
     - tax_expenditure_ethiopia_2021_22
+    format: uuid
   - name: domain_hint
     type: string
     required: true
-    description: 'domain_hint represented as string. Null fraction 0.000; distinct
-      values 2. Sample values: general, financial.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -94,11 +96,80 @@ models:
     enum:
     - financial
     - general
+  - name: extracted_facts__confidence
+    type: number
+    required: true
+    description: Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking
+      change.
+    metrics:
+      dtype: float64
+      null_fraction: 0.0
+      cardinality: 2
+      min: 0.9
+      max: 0.95
+      mean: 0.90023
+      std: 0.003384
+      p95: 0.9
+      p99: 0.9
+    minimum: 0.0
+    maximum: 1.0
+  - name: extracted_facts__fact_type
+    type: string
+    required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1.
+    metrics:
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum:
+    - text_block
+  - name: extracted_facts__index
+    type: integer
+    required: true
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      1. Observed range 0.0 to 0.0; mean 0.0; std 0.0; p95 0.0; p99 0.0.
+    metrics:
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      std: 0.0
+      p95: 0.0
+      p99: 0.0
+    minimum: 0.0
+    maximum: 0.0
+  - name: extracted_facts__value
+    type: number
+    required: true
+    description: Auto-generated number field. Null fraction 0.000; distinct values
+      410. Observed range -3.0 to 140.0; mean 33.859551; std 33.742747; p95 112.0;
+      p99 140.0.
+    metrics:
+      dtype: float64
+      null_fraction: 0.0
+      cardinality: 410
+      min: -3.0
+      max: 140.0
+      mean: 33.859551
+      std: 33.742747
+      p95: 112.0
+      p99: 140.0
+    minimum: -3.0
+    maximum: 140.0
   - name: language
     type: string
     required: true
-    description: 'Detected language code for the extracted block. Sample values: am,
-      en.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -132,8 +203,8 @@ models:
   - name: layout_complexity
     type: string
     required: true
-    description: 'layout_complexity represented as string. Null fraction 0.000; distinct
-      values 2. Sample values: single_column, table_heavy.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -150,8 +221,8 @@ models:
   - name: origin_type
     type: string
     required: true
-    description: 'origin_type represented as string. Null fraction 0.000; distinct
-      values 2. Sample values: scanned_image, native_digital.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -168,9 +239,9 @@ models:
   - name: page_number
     type: integer
     required: true
-    description: 'page_number represented as integer. Null fraction 0.000; distinct
-      values 60. Sample values: 1, 2, 3. Observed range 1.0 to 60.0; mean 29.455521;
-      std 15.604767; p95 56.45; p99 59.0.'
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      60. Observed range 1.0 to 60.0; mean 29.455521; std 15.604767; p95 56.45; p99
+      59.0.
     metrics:
       dtype: int64
       null_fraction: 0.0
@@ -186,8 +257,8 @@ models:
   - name: processed_at
     type: string
     required: true
-    description: 'processed_at represented as string. Null fraction 0.000; distinct
-      values 2. Sample values: 2026-03-07T20:02:37.191264, 2026-03-08T02:29:56.247097.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -198,13 +269,16 @@ models:
       std: null
       p95: null
       p99: null
+    enum:
+    - '2026-03-07T20:02:37.191264'
+    - '2026-03-08T02:29:56.247097'
     format: date-time
   - name: processing_time_seconds
     type: number
     required: true
-    description: 'processing_time_seconds represented as number. Null fraction 0.000;
-      distinct values 2. Sample values: 63.7209, 38.539. Observed range 38.539 to
-      63.7209; mean 38.654868; std 1.704213; p95 38.539; p99 38.539.'
+    description: Auto-generated number field. Null fraction 0.000; distinct values
+      2. Observed range 38.539 to 63.7209; mean 38.654868; std 1.704213; p95 38.539;
+      p99 38.539.
     metrics:
       dtype: float64
       null_fraction: 0.0
@@ -220,8 +294,8 @@ models:
   - name: source_doc_id
     type: string
     required: true
-    description: 'Original source document identifier carried into the extraction
-      output. Sample values: 2013-E.C-Audit-finding-information, tax_expenditure_ethiopia_2021_22.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -235,11 +309,12 @@ models:
     enum:
     - 2013-E.C-Audit-finding-information
     - tax_expenditure_ethiopia_2021_22
+    format: uuid
   - name: status
     type: string
     required: true
-    description: 'status represented as string. Null fraction 0.000; distinct values
-      1. Sample values: success.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -255,8 +330,8 @@ models:
   - name: strategy_used
     type: string
     required: true
-    description: 'strategy_used represented as string. Null fraction 0.000; distinct
-      values 2. Sample values: vision, layout.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -273,9 +348,9 @@ models:
   - name: text_length
     type: integer
     required: true
-    description: 'text_length represented as integer. Null fraction 0.000; distinct
-      values 221. Sample values: 590, 890, 416. Observed range 1.0 to 1035.0; mean
-      121.084356; std 186.995023; p95 581.85; p99 781.8.'
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      221. Observed range 1.0 to 1035.0; mean 121.084356; std 186.995023; p95 581.85;
+      p99 781.8.
     metrics:
       dtype: int64
       null_fraction: 0.0
@@ -289,87 +364,20 @@ models:
     minimum: 1.0
     maximum: 1035.0
   - name: text_preview
-    type: string
+    type: number
     required: true
-    description: 'text_preview represented as string. Null fraction 0.000; distinct
-      values 410. Sample values: አባሪ 3. የኦዲት ግኝት መረጃ አመላካች
-
-
-      መረጃ ሰጪው፡- የኢትዮጵያ ኢ..., ወጪ 3
-
-      3.1 ሁኔታ:- በጀት ዓመቱን ሳይጠብቅ ተከፍሎ የተገኘ ሂሳብ
-
-      3..., ከላይ ከተራ ቁጥር 1 እስከ 5 ከተገለጹት በስተቀር በእኛ አስተያ የሂሣ....'
+    description: Auto-generated number field. Null fraction 0.000; distinct values
+      410. Observed range -3.0 to 140.0; mean 33.859551; std 33.742747; p95 112.0;
+      p99 140.0.
     metrics:
       dtype: float64
       null_fraction: 0.0
       cardinality: 410
-      min: null
-      max: null
-      mean: null
-      std: null
-      p95: null
-      p99: null
-  - name: extracted_facts
-    type: array
-    description: 'Collection field extracted_facts exploded for profiling and represented
-      as array items. Item fields: confidence, fact_type, value.'
-    items:
-      type: object
-      fields:
-      - name: confidence
-        type: number
-        required: true
-        description: Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking
-          change.
-        metrics:
-          dtype: float64
-          null_fraction: 0.0
-          cardinality: 2
-          min: 0.9
-          max: 0.95
-          mean: 0.90023
-          std: 0.003384
-          p95: 0.9
-          p99: 0.9
-        minimum: 0.0
-        maximum: 1.0
-      - name: fact_type
-        type: string
-        required: true
-        description: 'Semantic type assigned to each extracted fact item. Sample values:
-          text_block.'
-        metrics:
-          dtype: object
-          null_fraction: 0.0
-          cardinality: 1
-          min: null
-          max: null
-          mean: null
-          std: null
-          p95: null
-          p99: null
-        enum:
-        - text_block
-      - name: value
-        type: string
-        required: true
-        description: 'Extracted fact payload captured from document content. Sample
-          values: አባሪ 3. የኦዲት ግኝት መረጃ አመላካች
-
-
-          መረጃ ሰጪው፡- የኢትዮጵያ ኢ..., ወጪ 3
-
-          3.1 ሁኔታ:- በጀት ዓመቱን ሳይጠብቅ ተከፍሎ የተገኘ ሂሳብ
-
-          3..., ከላይ ከተራ ቁጥር 1 እስከ 5 ከተገለጹት በስተቀር በእኛ አስተያ የሂሣ....'
-        metrics:
-          dtype: float64
-          null_fraction: 0.0
-          cardinality: 410
-          min: null
-          max: null
-          mean: null
-          std: null
-          p95: null
-          p99: null
+      min: -3.0
+      max: 140.0
+      mean: 33.859551
+      std: 33.742747
+      p95: 112.0
+      p99: 140.0
+    minimum: -3.0
+    maximum: 140.0

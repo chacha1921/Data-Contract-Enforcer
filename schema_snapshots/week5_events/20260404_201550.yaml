@@ -28,8 +28,8 @@ models:
   - name: aggregate_id
     type: string
     required: true
-    description: 'Identifier for the event-sourced aggregate that emitted the event.
-      Sample values: loan-APEX-0001, docpkg-APEX-0001, loan-APEX-0002.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      151.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -40,11 +40,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: aggregate_type
     type: string
     required: true
-    description: 'Aggregate category responsible for the event. Sample values: loan,
-      docpkg, agent.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      6.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -65,8 +66,8 @@ models:
   - name: applicant_id
     type: string
     required: false
-    description: 'applicant_id represented as string. Null fraction 0.964; distinct
-      values 26. Sample values: COMP-074, COMP-041, COMP-031.'
+    description: Auto-generated string field. Null fraction 0.964; distinct values
+      26.
     metrics:
       dtype: object
       null_fraction: 0.964107
@@ -77,11 +78,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: application_id
     type: string
     required: false
-    description: 'application_id represented as string. Null fraction 0.465; distinct
-      values 29. Sample values: APEX-0001, APEX-0002, APEX-0003.'
+    description: Auto-generated string field. Null fraction 0.465; distinct values
+      29.
     metrics:
       dtype: object
       null_fraction: 0.464942
@@ -92,11 +94,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: document_format
     type: string
     required: false
-    description: 'document_format represented as string. Null fraction 0.846; distinct
-      values 2. Sample values: pdf, xlsx.'
+    description: Auto-generated string field. Null fraction 0.846; distinct values
+      2.
     metrics:
       dtype: object
       null_fraction: 0.846411
@@ -113,8 +116,8 @@ models:
   - name: document_id
     type: string
     required: false
-    description: 'document_id represented as string. Null fraction 0.741; distinct
-      values 146. Sample values: doc-f2526123, doc-bf075eda, doc-648a7509.'
+    description: Auto-generated string field. Null fraction 0.741; distinct values
+      146.
     metrics:
       dtype: object
       null_fraction: 0.741235
@@ -125,11 +128,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: document_type
     type: string
     required: false
-    description: 'document_type represented as string. Null fraction 0.756; distinct
-      values 3. Sample values: application_proposal, income_statement, balance_sheet.'
+    description: Auto-generated string field. Null fraction 0.756; distinct values
+      3.
     metrics:
       dtype: object
       null_fraction: 0.75626
@@ -147,8 +151,8 @@ models:
   - name: event_id
     type: string
     required: true
-    description: 'Unique identifier for the emitted business event. Sample values:
-      loan-APEX-0001-0001, loan-APEX-0001-0002, docpkg-APEX-0001-0001.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1198.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -159,11 +163,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: event_type
     type: string
     required: true
-    description: 'Business event name emitted by the Week 5 ledger stream. Sample
-      values: ApplicationSubmitted, DocumentUploadRequested, PackageCreated.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      34.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -177,8 +182,8 @@ models:
   - name: event_version
     type: integer
     required: true
-    description: 'Version number of the event contract at emit time. Sample values:
-      1, 2. Observed range 1.0 to 2.0; mean 1.017529; std 0.131232; p95 1.0; p99 2.0.'
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      2. Observed range 1.0 to 2.0; mean 1.017529; std 0.131232; p95 1.0; p99 2.0.
     metrics:
       dtype: int64
       null_fraction: 0.0
@@ -194,8 +199,8 @@ models:
   - name: loan_purpose
     type: string
     required: false
-    description: 'loan_purpose represented as string. Null fraction 0.976; distinct
-      values 6. Sample values: working_capital, acquisition, real_estate.'
+    description: Auto-generated string field. Null fraction 0.976; distinct values
+      6.
     metrics:
       dtype: object
       null_fraction: 0.975793
@@ -216,8 +221,8 @@ models:
   - name: occurred_at
     type: string
     required: true
-    description: 'Timestamp when the event occurred in the source workflow. Sample
-      values: 2026-03-04T19:35:47.578271, 2026-03-11T19:35:47.578271, 2026-03-04T19:36:07.578271.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      857.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -232,8 +237,8 @@ models:
   - name: package_id
     type: string
     required: false
-    description: 'package_id represented as string. Null fraction 0.779; distinct
-      values 29. Sample values: APEX-0001, APEX-0002, APEX-0003.'
+    description: Auto-generated string field. Null fraction 0.779; distinct values
+      29.
     metrics:
       dtype: object
       null_fraction: 0.778798
@@ -244,11 +249,12 @@ models:
       std: null
       p95: null
       p99: null
+    format: uuid
   - name: recorded_at
     type: string
     required: true
-    description: 'Timestamp when the event was recorded in the ledger. Sample values:
-      2026-03-04T19:35:47.578271, 2026-03-04T19:36:07.578271, 2026-03-10T19:36:47.579523.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      828.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -261,12 +267,11 @@ models:
       p99: null
     format: date-time
   - name: requested_amount_usd
-    type: integer
+    type: number
     required: false
-    description: 'requested_amount_usd represented as integer. Null fraction 0.976;
-      distinct values 29. Sample values: 2679000.0, 2388000.0, 1017000.0. Observed
-      range 247000.0 to 6349000.0; mean 1883931.034483; std 1384340.672917; p95 4786200.0;
-      p99 6182120.0.'
+    description: Auto-generated number field. Null fraction 0.976; distinct values
+      29. Observed range 247000.0 to 6349000.0; mean 1883931.034483; std 1384340.672917;
+      p95 4786200.0; p99 6182120.0.
     metrics:
       dtype: float64
       null_fraction: 0.975793
@@ -282,9 +287,8 @@ models:
   - name: sequence_number
     type: integer
     required: true
-    description: 'sequence_number represented as integer. Null fraction 0.000; distinct
-      values 13. Sample values: 1, 2, 3. Observed range 1.0 to 13.0; mean 5.335559;
-      std 3.242444; p95 11.0; p99 13.0.'
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      13. Observed range 1.0 to 13.0; mean 5.335559; std 3.242444; p95 11.0; p99 13.0.
     metrics:
       dtype: int64
       null_fraction: 0.0
@@ -300,8 +304,8 @@ models:
   - name: source_system
     type: string
     required: true
-    description: 'source_system represented as string. Null fraction 0.000; distinct
-      values 1. Sample values: week5_events.'
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1.
     metrics:
       dtype: object
       null_fraction: 0.0
@@ -317,8 +321,8 @@ models:
   - name: submission_channel
     type: string
     required: false
-    description: 'submission_channel represented as string. Null fraction 0.976; distinct
-      values 4. Sample values: branch, web, mobile.'
+    description: Auto-generated string field. Null fraction 0.976; distinct values
+      4.
     metrics:
       dtype: object
       null_fraction: 0.975793

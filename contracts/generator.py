@@ -16,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_LINEAGE_PATH = PROJECT_ROOT / "outputs" / "week4" / "lineage_snapshots.jsonl"
 DEFAULT_REGISTRY_PATH = PROJECT_ROOT / "contract_registry" / "subscriptions.yaml"
 DEFAULT_EXPLODE_FIELDS = {"extracted_facts", "nodes", "edges"}
+UUID_PATTERN = re.compile(r"^[0-9a-f-]{36}$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -200,14 +201,33 @@ def safe_float(value: Any) -> float | None:
 
 def profile_column(series: pd.Series, column_name: str) -> dict[str, Any]:
     """Build structural and statistical profiles for a single flattened column."""
+    non_null = series.dropna()
+    string_lengths = [len(str(value)) for value in non_null.tolist()]
+    numeric_series = pd.to_numeric(non_null, errors="coerce")
+    numeric_non_null = numeric_series.dropna()
+    numeric_fraction = (
+        float(numeric_non_null.shape[0]) / float(non_null.shape[0]) if non_null.shape[0] else 0.0
+    )
+    all_numeric_integral = bool(
+        not numeric_non_null.empty
+        and numeric_non_null.shape[0] == non_null.shape[0]
+        and numeric_non_null.apply(lambda value: float(value).is_integer()).all()
+    )
+
     profile = {
         "name": column_name,
         "dtype": str(series.dtype),
+        "non_null_count": int(non_null.shape[0]),
         "null_fraction": round(float(series.isna().mean()), 6),
         "cardinality_estimate": int(series.nunique(dropna=True)),
         "sample_values": [
-            normalize_scalar(value) for value in series.dropna().unique().tolist()[:8]
+            normalize_scalar(value) for value in non_null.unique().tolist()[:8]
         ],
+        "avg_string_length": round(sum(string_lengths) / len(string_lengths), 6)
+        if string_lengths
+        else 0.0,
+        "numeric_fraction": round(numeric_fraction, 6),
+        "all_numeric_integral": all_numeric_integral,
         "stats": {
             "min": None,
             "max": None,
@@ -218,16 +238,15 @@ def profile_column(series: pd.Series, column_name: str) -> dict[str, Any]:
         },
     }
 
-    numeric_series = pd.to_numeric(series.dropna(), errors="coerce").dropna()
-    if not numeric_series.empty:
-        profile["dtype"] = str(numeric_series.dtype)
+    if not numeric_non_null.empty:
+        profile["dtype"] = str(numeric_non_null.dtype)
         profile["stats"] = {
-            "min": safe_float(numeric_series.min()),
-            "max": safe_float(numeric_series.max()),
-            "mean": safe_float(numeric_series.mean()),
-            "std": safe_float(numeric_series.std(ddof=0)),
-            "p95": safe_float(numeric_series.quantile(0.95)),
-            "p99": safe_float(numeric_series.quantile(0.99)),
+            "min": safe_float(numeric_non_null.min()),
+            "max": safe_float(numeric_non_null.max()),
+            "mean": safe_float(numeric_non_null.mean()),
+            "std": safe_float(numeric_non_null.std(ddof=0)),
+            "p95": safe_float(numeric_non_null.quantile(0.95)),
+            "p99": safe_float(numeric_non_null.quantile(0.99)),
         }
 
     return profile
@@ -243,9 +262,50 @@ def profile_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
     )
 
 
-def enum_values(profile: dict[str, Any], bitol_type: str) -> list[Any] | None:
+def sample_preview(value: Any, max_length: int = 48) -> str:
+    rendered = str(value)
+    if len(rendered) <= max_length:
+        return rendered
+    return f"{rendered[: max_length - 3]}..."
+
+
+def render_samples(profile: dict[str, Any], limit: int = 3) -> str:
+    samples = [sample_preview(value) for value in profile.get("sample_values", [])[:limit]]
+    return ", ".join(samples)
+
+
+def samples_match_uuid(profile: dict[str, Any]) -> bool:
+    samples = [str(value).lower() for value in profile.get("sample_values", []) if value is not None]
+    return bool(samples) and all(UUID_PATTERN.fullmatch(value) for value in samples)
+
+
+def force_string_for_textual_numeric(profile: dict[str, Any], field_name: str) -> bool:
+    leaf_name = field_name.split("__")[-1].lower()
+    avg_string_length = float(profile.get("avg_string_length", 0.0) or 0.0)
+    numeric_fraction = float(profile.get("numeric_fraction", 0.0) or 0.0)
+    text_like_leaf = leaf_name in {"value", "text"} or "text" in leaf_name
+    return avg_string_length > 10.0 and (text_like_leaf or numeric_fraction < 1.0)
+
+
+def infer_profile_type(profile: dict[str, Any], field_name: str) -> str:
+    dtype_str = str(profile["dtype"])
+    numeric_fraction = float(profile.get("numeric_fraction", 0.0) or 0.0)
+    non_null_count = int(profile.get("non_null_count", 0) or 0)
+
+    if field_name.endswith("_id"):
+        return "string"
+    if force_string_for_textual_numeric(profile, field_name):
+        return "string"
+    if non_null_count > 0 and numeric_fraction == 1.0:
+        return "integer" if bool(profile.get("all_numeric_integral")) else "number"
+    return infer_type(dtype_str)
+
+
+def enum_values(profile: dict[str, Any], bitol_type: str, field_name: str) -> list[Any] | None:
     """Only create enums for low-cardinality string columns, per the manual."""
     if bitol_type != "string":
+        return None
+    if field_name.endswith("_at"):
         return None
     if int(profile["cardinality_estimate"]) > 8:
         return None
@@ -255,12 +315,51 @@ def enum_values(profile: dict[str, Any], bitol_type: str) -> list[Any] | None:
     return sorted(values, key=lambda item: str(item))
 
 
-def describe_field(profile: dict[str, Any], bitol_type: str) -> str:
-    """Create a plain-English description so the contract reads well without code context."""
-    description = (
-        f"Auto-generated {bitol_type} field. Null fraction {profile['null_fraction']:.3f}; "
-        f"distinct values {profile['cardinality_estimate']}."
-    )
+def describe_field(profile: dict[str, Any], bitol_type: str, contract_id: str, field_name: str) -> str:
+    """Generate clearer field descriptions using names, samples, and dataset-specific hints."""
+    leaf_name = field_name.split("__")[-1].lower()
+    sample_text = render_samples(profile)
+
+    if "confidence" in leaf_name and bitol_type == "number":
+        return "Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking change."
+
+    week3_hints = {
+        "doc_id": "Document identifier for the extracted source document.",
+        "source_doc_id": "Original source document identifier carried into the extraction output.",
+        "block_id": "Identifier for the extracted page block or OCR segment.",
+        "block_type": "Block classification emitted by the extraction pipeline.",
+        "language": "Detected language code for the extracted block.",
+        "language_confidence": "Confidence score for language detection on the extracted block.",
+        "fact_type": "Semantic type assigned to each extracted fact item.",
+        "value": "Extracted fact payload captured from document content.",
+    }
+    week5_hints = {
+        "event_id": "Unique identifier for the emitted business event.",
+        "aggregate_id": "Identifier for the event-sourced aggregate that emitted the event.",
+        "aggregate_type": "Aggregate category responsible for the event.",
+        "event_type": "Business event name emitted by the Week 5 ledger stream.",
+        "event_version": "Version number of the event contract at emit time.",
+        "occurred_at": "Timestamp when the event occurred in the source workflow.",
+        "recorded_at": "Timestamp when the event was recorded in the ledger.",
+    }
+
+    description = None
+    if contract_id.startswith("week3"):
+        if field_name.startswith("extracted_facts__"):
+            description = week3_hints.get(leaf_name, "Nested extracted fact attribute.")
+        else:
+            description = week3_hints.get(leaf_name)
+    elif contract_id.startswith("week5"):
+        description = week5_hints.get(leaf_name)
+
+    if description is None:
+        description = (
+            f"{field_name.replace('__', ' -> ')} represented as {bitol_type}. "
+            f"Null fraction {profile['null_fraction']:.3f}; distinct values {profile['cardinality_estimate']}."
+        )
+
+    if sample_text:
+        description += f" Sample values: {sample_text}."
     if bitol_type in {"number", "integer"}:
         stats = profile["stats"]
         description += (
@@ -270,23 +369,37 @@ def describe_field(profile: dict[str, Any], bitol_type: str) -> str:
     return description
 
 
-def column_to_clause(profile: dict[str, Any]) -> dict[str, Any]:
+def column_to_clause(
+    profile: dict[str, Any],
+    contract_id: str,
+    *,
+    field_name_override: str | None = None,
+) -> dict[str, Any]:
     """Translate a column profile into Bitol field clauses."""
-    bitol_type = infer_type(str(profile["dtype"]))
+    field_name = field_name_override or str(profile["name"])
+    bitol_type = infer_profile_type(profile, field_name)
+    numeric_metrics = profile["stats"] if bitol_type in {"number", "integer"} else {
+        "min": None,
+        "max": None,
+        "mean": None,
+        "std": None,
+        "p95": None,
+        "p99": None,
+    }
     clause: dict[str, Any] = {
-        "name": profile["name"],
+        "name": field_name,
         "type": bitol_type,
         "required": profile["null_fraction"] == 0.0,
-        "description": describe_field(profile, bitol_type),
+        "description": describe_field(profile, bitol_type, contract_id, field_name),
         "metrics": {
             "dtype": profile["dtype"],
             "null_fraction": profile["null_fraction"],
             "cardinality": profile["cardinality_estimate"],
-            **profile["stats"],
+            **numeric_metrics,
         },
     }
 
-    enum = enum_values(profile, bitol_type)
+    enum = enum_values(profile, bitol_type, field_name)
     if enum:
         clause["enum"] = enum
 
@@ -296,8 +409,7 @@ def column_to_clause(profile: dict[str, Any]) -> dict[str, Any]:
         if profile["stats"]["max"] is not None:
             clause["maximum"] = profile["stats"]["max"]
 
-    field_name = str(profile["name"])
-    if field_name.endswith("_id") or field_name == "id":
+    if field_name.endswith("_id") and samples_match_uuid(profile):
         clause["format"] = "uuid"
     if field_name.endswith("_at"):
         clause["format"] = "date-time"
@@ -305,12 +417,87 @@ def column_to_clause(profile: dict[str, Any]) -> dict[str, Any]:
     if "confidence" in field_name.lower() and bitol_type == "number":
         clause["minimum"] = 0.0
         clause["maximum"] = 1.0
-        clause["description"] = (
-            "Confidence score. MUST remain in the 0.0-1.0 range. "
-            "A shift to a 0-100 percentage scale is a breaking change that downstream consumers must treat as incompatible."
-        )
 
     return clause
+
+
+def build_array_field_clauses(profiles: list[dict[str, Any]], contract_id: str) -> list[dict[str, Any]]:
+    array_groups: dict[str, list[dict[str, Any]]] = {}
+    for profile in profiles:
+        name = str(profile["name"])
+        root_name, separator, child_name = name.partition("__")
+        if not separator or root_name not in DEFAULT_EXPLODE_FIELDS:
+            continue
+        if child_name in {"index", "count"}:
+            continue
+        array_groups.setdefault(root_name, []).append(profile)
+
+    clauses: list[dict[str, Any]] = []
+    for root_name, child_profiles in sorted(array_groups.items()):
+        item_fields = [
+            column_to_clause(
+                profile,
+                contract_id,
+                field_name_override=str(profile["name"]).split("__", 1)[1],
+            )
+            for profile in child_profiles
+        ]
+        clauses.append(
+            {
+                "name": root_name,
+                "type": "array",
+                "description": (
+                    f"Collection field {root_name} exploded for profiling and represented as array items. "
+                    f"Item fields: {', '.join(field['name'] for field in item_fields)}."
+                ),
+                "items": {
+                    "type": "object",
+                    "fields": item_fields,
+                },
+            }
+        )
+    return clauses
+
+
+def build_model_fields(profiles: list[dict[str, Any]], contract_id: str) -> list[dict[str, Any]]:
+    array_child_names: set[str] = set()
+    for profile in profiles:
+        name = str(profile["name"])
+        root_name, separator, child_name = name.partition("__")
+        if separator and root_name in DEFAULT_EXPLODE_FIELDS:
+            array_child_names.add(name)
+
+    scalar_fields = [
+        column_to_clause(profile, contract_id)
+        for profile in profiles
+        if str(profile["name"]) not in array_child_names
+    ]
+    return scalar_fields + build_array_field_clauses(profiles, contract_id)
+
+
+def expand_contract_fields_for_columns(
+    fields: list[dict[str, Any]],
+    prefix: str = "",
+) -> list[dict[str, Any]]:
+    expanded_fields: list[dict[str, Any]] = []
+    for field in fields:
+        if not isinstance(field, dict) or not field.get("name"):
+            continue
+
+        field_name = f"{prefix}{field['name']}" if prefix else str(field["name"])
+        if field.get("type") == "array" and isinstance(field.get("items"), dict):
+            item_fields = field["items"].get("fields", [])
+            if isinstance(item_fields, list):
+                expanded_fields.extend(
+                    expand_contract_fields_for_columns(item_fields, prefix=f"{field_name}__")
+                )
+            continue
+
+        flattened_field = dict(field)
+        flattened_field["name"] = field_name
+        expanded_fields.append(flattened_field)
+
+    return expanded_fields
 
 
 def parse_lineage_payload(path: Path) -> tuple[dict[str, Any] | list[Any] | None, str | None]:
@@ -472,15 +659,17 @@ def build_bitol_contract(
             "source": make_relative_path(source_path),
             "lineage_snapshot": lineage_snapshot_ref,
             "registry": make_relative_path(registry_path),
+            "registry_subscribers_source": make_relative_path(registry_path),
+            "downstream_nodes_from_lineage_source": lineage_snapshot_ref,
             "downstream_nodes_from_lineage": downstream_nodes,
             "registry_subscribers": registry_subscribers,
-            "note": "Blast radius uses registry_subscribers as the primary source. Lineage nodes are enrichment only.",
+            "note": "registry_subscribers come from subscriptions.yaml and drive blast-radius decisions. downstream_nodes_from_lineage come from the Week 4 lineage snapshot and are enrichment only.",
         },
         "models": [
             {
                 "name": slugify(contract_id),
                 "type": "table",
-                "fields": [column_to_clause(profile) for profile in profiles],
+                "fields": build_model_fields(profiles, contract_id),
             }
         ],
     }
@@ -490,7 +679,8 @@ def build_dbt_schema(contract: dict[str, Any], source_path: Path) -> dict[str, A
     """Emit a companion dbt schema.yml with tests for required and enum fields."""
     models = contract.get("models", [])
     model = models[0] if isinstance(models, list) and models else {}
-    fields = model.get("fields", []) if isinstance(model, dict) else []
+    model_fields = model.get("fields", []) if isinstance(model, dict) else []
+    fields = expand_contract_fields_for_columns(model_fields if isinstance(model_fields, list) else [])
     columns: list[dict[str, Any]] = []
 
     for field in fields:

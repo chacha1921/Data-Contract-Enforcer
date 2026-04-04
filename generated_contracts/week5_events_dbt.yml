@@ -89,7 +89,7 @@ models:
     - not_null
   - name: requested_amount_usd
     description: Auto-generated from events.jsonl
-    data_type: number
+    data_type: integer
   - name: sequence_number
     description: Auto-generated from events.jsonl
     data_type: integer

@@ -2,8 +2,4 @@
 __pycache__/
 *.pyc
 .env
-schema_snapshots/
-violation_log/
-enforcer_report/
-
 repos/

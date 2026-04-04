@@ -1,0 +1,443 @@
+{
+  "report_id": "eafc2242-83ac-4b37-b6e7-5253f3f5c53c",
+  "contract_id": "week5_events",
+  "snapshot_id": "6c6684bd603fc5e89a061535794900a6abbebdf11c4f0e5502560b66633a7a82",
+  "run_timestamp": "2026-04-04T20:23:07.527273+00:00",
+  "total_checks": 41,
+  "passed": 28,
+  "failed": 10,
+  "warned": 0,
+  "results": [
+    {
+      "check_id": "required:aggregate_id",
+      "column_name": "aggregate_id",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:aggregate_id",
+      "column_name": "aggregate_id",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "format_uuid:aggregate_id",
+      "column_name": "aggregate_id",
+      "check_type": "format_uuid",
+      "status": "FAIL",
+      "actual_value": "loan-APEX-0001",
+      "expected": "^[0-9a-f-]{36}$",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected uuid format."
+    },
+    {
+      "check_id": "required:aggregate_type",
+      "column_name": "aggregate_type",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:aggregate_type",
+      "column_name": "aggregate_type",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "type_conformance:applicant_id",
+      "column_name": "applicant_id",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "format_uuid:applicant_id",
+      "column_name": "applicant_id",
+      "check_type": "format_uuid",
+      "status": "FAIL",
+      "actual_value": "COMP-074",
+      "expected": "^[0-9a-f-]{36}$",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected uuid format."
+    },
+    {
+      "check_id": "type_conformance:application_id",
+      "column_name": "application_id",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "format_uuid:application_id",
+      "column_name": "application_id",
+      "check_type": "format_uuid",
+      "status": "FAIL",
+      "actual_value": "APEX-0001",
+      "expected": "^[0-9a-f-]{36}$",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected uuid format."
+    },
+    {
+      "check_id": "type_conformance:document_format",
+      "column_name": "document_format",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "type_conformance:document_id",
+      "column_name": "document_id",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "format_uuid:document_id",
+      "column_name": "document_id",
+      "check_type": "format_uuid",
+      "status": "FAIL",
+      "actual_value": "doc-f2526123",
+      "expected": "^[0-9a-f-]{36}$",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected uuid format."
+    },
+    {
+      "check_id": "type_conformance:document_type",
+      "column_name": "document_type",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "required:event_id",
+      "column_name": "event_id",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:event_id",
+      "column_name": "event_id",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "format_uuid:event_id",
+      "column_name": "event_id",
+      "check_type": "format_uuid",
+      "status": "FAIL",
+      "actual_value": "loan-APEX-0001-0001",
+      "expected": "^[0-9a-f-]{36}$",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected uuid format."
+    },
+    {
+      "check_id": "required:event_type",
+      "column_name": "event_type",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:event_type",
+      "column_name": "event_type",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "required:event_version",
+      "column_name": "event_version",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:event_version",
+      "column_name": "event_version",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "integer",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "range_enforcement:event_version",
+      "column_name": "event_version",
+      "check_type": "range_enforcement",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": {
+        "minimum": 1.0,
+        "maximum": 2.0
+      },
+      "severity": "INFO",
+      "message": "Numeric values are within the contract range."
+    },
+    {
+      "check_id": "type_conformance:loan_purpose",
+      "column_name": "loan_purpose",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "required:occurred_at",
+      "column_name": "occurred_at",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:occurred_at",
+      "column_name": "occurred_at",
+      "check_type": "type_conformance",
+      "status": "FAIL",
+      "actual_value": "2026-03-04T19:35:47.578271",
+      "expected": "string",
+      "severity": "CRITICAL",
+      "message": "Observed values do not conform to the contract type."
+    },
+    {
+      "check_id": "format_date-time:occurred_at",
+      "column_name": "occurred_at",
+      "check_type": "format_date-time",
+      "status": "FAIL",
+      "actual_value": "2026-03-04T19:35:47.578271",
+      "expected": "datetime.fromisoformat() compatible",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected date-time format."
+    },
+    {
+      "check_id": "type_conformance:package_id",
+      "column_name": "package_id",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "format_uuid:package_id",
+      "column_name": "package_id",
+      "check_type": "format_uuid",
+      "status": "FAIL",
+      "actual_value": "APEX-0001",
+      "expected": "^[0-9a-f-]{36}$",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected uuid format."
+    },
+    {
+      "check_id": "required:recorded_at",
+      "column_name": "recorded_at",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:recorded_at",
+      "column_name": "recorded_at",
+      "check_type": "type_conformance",
+      "status": "FAIL",
+      "actual_value": "2026-03-04T19:35:47.578271",
+      "expected": "string",
+      "severity": "CRITICAL",
+      "message": "Observed values do not conform to the contract type."
+    },
+    {
+      "check_id": "format_date-time:recorded_at",
+      "column_name": "recorded_at",
+      "check_type": "format_date-time",
+      "status": "FAIL",
+      "actual_value": "2026-03-04T19:35:47.578271",
+      "expected": "datetime.fromisoformat() compatible",
+      "severity": "CRITICAL",
+      "message": "One or more values do not match the expected date-time format."
+    },
+    {
+      "check_id": "type_conformance:requested_amount_usd",
+      "column_name": "requested_amount_usd",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "number",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "range_enforcement:requested_amount_usd",
+      "column_name": "requested_amount_usd",
+      "check_type": "range_enforcement",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": {
+        "minimum": 247000.0,
+        "maximum": 6349000.0
+      },
+      "severity": "INFO",
+      "message": "Numeric values are within the contract range."
+    },
+    {
+      "check_id": "required:sequence_number",
+      "column_name": "sequence_number",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:sequence_number",
+      "column_name": "sequence_number",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "integer",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "range_enforcement:sequence_number",
+      "column_name": "sequence_number",
+      "check_type": "range_enforcement",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": {
+        "minimum": 1.0,
+        "maximum": 13.0
+      },
+      "severity": "INFO",
+      "message": "Numeric values are within the contract range."
+    },
+    {
+      "check_id": "required:source_system",
+      "column_name": "source_system",
+      "check_type": "required",
+      "status": "PASS",
+      "actual_value": 0,
+      "expected": 0,
+      "severity": "INFO",
+      "message": "Required field contains no nulls."
+    },
+    {
+      "check_id": "type_conformance:source_system",
+      "column_name": "source_system",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "type_conformance:submission_channel",
+      "column_name": "submission_channel",
+      "check_type": "type_conformance",
+      "status": "PASS",
+      "actual_value": null,
+      "expected": "string",
+      "severity": "INFO",
+      "message": "Observed values conform to the contract type."
+    },
+    {
+      "check_id": "statistical_drift:extracted_facts__confidence",
+      "column_name": "extracted_facts__confidence",
+      "check_type": "statistical_drift",
+      "status": "ERROR",
+      "actual_value": null,
+      "expected": {
+        "mean": 0.841667,
+        "stddev": 0.061215,
+        "row_count": 180
+      },
+      "severity": "HIGH",
+      "message": "Column defined in the contract is missing from the data."
+    },
+    {
+      "check_id": "statistical_drift:extracted_facts__fact_index",
+      "column_name": "extracted_facts__fact_index",
+      "check_type": "statistical_drift",
+      "status": "ERROR",
+      "actual_value": null,
+      "expected": {
+        "mean": 1.0,
+        "stddev": 0.816497,
+        "row_count": 180
+      },
+      "severity": "HIGH",
+      "message": "Column defined in the contract is missing from the data."
+    },
+    {
+      "check_id": "statistical_drift:extracted_facts__value",
+      "column_name": "extracted_facts__value",
+      "check_type": "statistical_drift",
+      "status": "ERROR",
+      "actual_value": null,
+      "expected": {
+        "mean": 341.25,
+        "stddev": 129.885767,
+        "row_count": 60
+      },
+      "severity": "HIGH",
+      "message": "Column defined in the contract is missing from the data."
+    }
+  ]
+}

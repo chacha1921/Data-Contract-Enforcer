@@ -1,0 +1,16 @@
+dataContractSpecification: 1.1.0
+id: tmp_missing_column_contract
+info:
+  title: tmp_missing_column_contract
+  version: 1.0.0
+models:
+  - name: tmp_missing_column_contract
+    type: table
+    fields:
+      - name: block_id
+        type: string
+        required: true
+      - name: definitely_missing_column
+        type: string
+        required: true
+        format: uuid

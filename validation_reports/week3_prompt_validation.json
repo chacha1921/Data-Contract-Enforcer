@@ -1,0 +1,9 @@
+{
+  "check": "prompt_input_validation",
+  "status": "PASS",
+  "total_records": 652,
+  "invalid_records": 0,
+  "quarantine_file": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/outputs/quarantine/prompt_input_quarantine_20260404_204927.jsonl",
+  "run_timestamp": "2026-04-04T20:49:27.214011+00:00",
+  "message": "All prompt input records conform to the Draft-07 schema."
+}

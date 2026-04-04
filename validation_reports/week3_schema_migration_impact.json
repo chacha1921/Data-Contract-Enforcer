@@ -1,0 +1,73 @@
+{
+  "contract_id": "week3_extractions",
+  "migration_impact": {
+    "analyzed_at": "2026-04-04T20:49:26.669248+00:00",
+    "previous_snapshot": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/schema_snapshots/week3_extractions/20260404_201550.yaml",
+    "current_snapshot": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/schema_snapshots/week3_extractions/20260404_203535.yaml",
+    "diff": [
+      {
+        "change_type": "change_format",
+        "compatibility": "BREAKING",
+        "field": "block_id",
+        "details": {
+          "from": "uuid",
+          "to": null
+        }
+      },
+      {
+        "change_type": "change_format",
+        "compatibility": "BREAKING",
+        "field": "doc_id",
+        "details": {
+          "from": "uuid",
+          "to": null
+        }
+      },
+      {
+        "change_type": "remove_field",
+        "compatibility": "BREAKING",
+        "field": "extracted_facts__index",
+        "details": {
+          "type": "integer",
+          "required": true,
+          "format": null
+        }
+      },
+      {
+        "change_type": "change_type",
+        "compatibility": "BREAKING",
+        "field": "extracted_facts__value",
+        "details": {
+          "from": "number",
+          "to": "string"
+        }
+      },
+      {
+        "change_type": "change_format",
+        "compatibility": "BREAKING",
+        "field": "source_doc_id",
+        "details": {
+          "from": "uuid",
+          "to": null
+        }
+      },
+      {
+        "change_type": "change_type",
+        "compatibility": "BREAKING",
+        "field": "text_preview",
+        "details": {
+          "from": "number",
+          "to": "string"
+        }
+      }
+    ],
+    "compatibility_verdict": "BREAKING",
+    "migration_checklist": [
+      "Review all downstream registry subscribers for compatibility impact.",
+      "Plan a version bump before releasing the new contract.",
+      "Coordinate a migration window for affected consumers.",
+      "Update enforcement thresholds and downstream transformations.",
+      "Backfill or cast historical data before cutover to the new type."
+    ]
+  }
+}

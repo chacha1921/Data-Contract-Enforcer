@@ -14,6 +14,7 @@ It includes:
 - a contract generator that profiles source data and emits Bitol + dbt YAML
 - a validation runner that checks structure, types, ranges, UUIDs, and drift
 - a migration script for rebuilding Week 1-5 submission data from repo-backed sources
+- a contract registry used for blast-radius context and subscriber attribution
 - a preflight checker that audits the repository against the Thursday submission requirements
 
 ## Current Data Sources
@@ -51,6 +52,8 @@ outputs/
 		extractions.jsonl   Week 3 extraction dataset
 	week5/
 		events.jsonl        Week 5 event dataset
+contract_registry/
+	subscriptions.yaml   Subscriber registry used for contract lineage context
 generated_contracts/    Generated Bitol and dbt contract files
 schema_snapshots/       Baseline statistics for drift checks
 validation_reports/     JSON output from ValidationRunner
@@ -67,14 +70,18 @@ preflight_submission.py Automated submission readiness checker
 
 - a Bitol-compatible YAML contract
 - a dbt schema YAML companion
+- a timestamped schema snapshot in `schema_snapshots/{contract_id}/`
 
 Key features:
 
+- CLI args for `--source`, `--contract-id`, `--lineage`, `--registry`, and `--output`
+- flattening support for array-heavy payloads like Week 3 `extracted_facts` and Week 4 `nodes` / `edges`
+- structural profiles for dtype, null fraction, and cardinality
 - optional `--contract-id` and `--lineage` arguments
 - evaluator-friendly defaults from the source path
-- Week 3 flattening support for `extracted_facts`
-- numeric statistics including `min`, `max`, `mean`, `stddev`, `p25`, `p50`, `p75`, and `p95`
-- downstream lineage injection from `outputs/week4/lineage_snapshots.jsonl`
+- numeric statistics including `min`, `max`, `mean`, `stddev`, `p95`, and `p99`
+- lineage enrichment from Week 4 snapshots and subscriber enrichment from `contract_registry/subscriptions.yaml`
+- confidence-field guards that force the `0.0`-`1.0` range and document the `0-100` scale shift as a breaking change
 
 Default filename mapping:
 
@@ -182,6 +189,7 @@ python contracts/generator.py \
 	--source outputs/week3/extractions.jsonl \
 	--contract-id week3_extractions \
 	--lineage outputs/week4/lineage_snapshots.jsonl \
+	--registry contract_registry/subscriptions.yaml \
 	--output generated_contracts/
 ```
 

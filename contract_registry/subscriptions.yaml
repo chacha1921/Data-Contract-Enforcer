@@ -1,0 +1,67 @@
+subscriptions:
+  - contract_id: week3_extractions
+    subscriber_id: week4_cartographer
+    fields_consumed:
+      - doc_id
+      - extracted_facts__confidence
+      - source_doc_id
+    breaking_fields:
+      - field: extracted_facts__confidence
+        reason: Confidence drives downstream ranking and a 0.0-1.0 to 0-100 scale shift breaks ordering.
+      - field: doc_id
+        reason: Used as the primary identifier in downstream lineage and enrichment flows.
+    validation_mode: AUDIT
+    registered_at: '2026-04-04T00:00:00Z'
+    contact: week4-team@org.com
+  - contract_id: week3_extractions
+    subscriber_id: week6_contract_enforcer
+    fields_consumed:
+      - doc_id
+      - extracted_facts__confidence
+      - processed_at
+    breaking_fields:
+      - field: extracted_facts__confidence
+        reason: Validation rules enforce the confidence range and drift thresholds.
+    validation_mode: ENFORCE
+    registered_at: '2026-04-04T00:00:00Z'
+    contact: week6-team@org.com
+  - contract_id: week4_lineage_snapshots
+    subscriber_id: week6_contract_enforcer
+    fields_consumed:
+      - captured_at
+      - edges__source
+      - edges__target
+    breaking_fields:
+      - field: edges__target
+        reason: Blast-radius enrichment depends on stable downstream node identities.
+    validation_mode: AUDIT
+    registered_at: '2026-04-04T00:00:00Z'
+    contact: week6-team@org.com
+  - contract_id: week5_events
+    subscriber_id: week6_contract_enforcer
+    fields_consumed:
+      - event_id
+      - aggregate_id
+      - event_type
+      - occurred_at
+    breaking_fields:
+      - field: event_type
+        reason: Event-routing and contract clauses depend on stable event taxonomy.
+      - field: occurred_at
+        reason: Temporal validation and lineage attribution rely on event timestamps.
+    validation_mode: ENFORCE
+    registered_at: '2026-04-04T00:00:00Z'
+    contact: week6-team@org.com
+  - contract_id: outputs_traces_runs
+    subscriber_id: week6_contract_enforcer
+    fields_consumed:
+      - run_type
+      - total_tokens
+      - total_cost
+      - session_id
+    breaking_fields:
+      - field: total_cost
+        reason: Cost observability depends on stable numeric trace fields.
+    validation_mode: AUDIT
+    registered_at: '2026-04-04T00:00:00Z'
+    contact: week6-team@org.com

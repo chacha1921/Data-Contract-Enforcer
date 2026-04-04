@@ -3,16 +3,21 @@ id: week5_events
 info:
   title: week5_events
   version: 1.0.0
-  description: Auto-generated from events.jsonl
+  description: Auto-generated contract for events.jsonl
   owner: data-engineering
 lineage:
   source: outputs/week5/events.jsonl
-  lineage_snapshot: lineage_snapshots.jsonl
-  injected_lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
-  downstream_consumers: &id001
-  - operations_event_dashboard
-  - dbt_week5_events_model
-downstream: *id001
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  downstream_nodes_from_lineage:
+  - node_id: operations_event_dashboard
+    relationship: LINKED
+  - node_id: dbt_week5_events_model
+    relationship: LINKED
+  registry_subscribers:
+  - week6_contract_enforcer
+  note: Blast radius uses registry_subscribers as the primary source. Lineage nodes
+    are enrichment only.
 models:
 - name: week5_events
   type: table
@@ -20,31 +25,34 @@ models:
   - name: aggregate_id
     type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      151.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 151
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: uuid
   - name: aggregate_type
     type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      6.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 6
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
     enum:
     - agent
     - compliance
@@ -55,76 +63,84 @@ models:
   - name: applicant_id
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.964; distinct values
+      26.
     metrics:
-      null_fraction: 0.964107
       dtype: object
+      null_fraction: 0.964107
+      cardinality: 26
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: uuid
   - name: application_id
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.465; distinct values
+      29.
     metrics:
-      null_fraction: 0.464942
       dtype: object
+      null_fraction: 0.464942
+      cardinality: 29
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: uuid
   - name: document_format
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.846; distinct values
+      2.
     metrics:
-      null_fraction: 0.846411
       dtype: object
+      null_fraction: 0.846411
+      cardinality: 2
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
     enum:
     - pdf
     - xlsx
   - name: document_id
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.741; distinct values
+      146.
     metrics:
-      null_fraction: 0.741235
       dtype: object
+      null_fraction: 0.741235
+      cardinality: 146
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: uuid
   - name: document_type
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.756; distinct values
+      3.
     metrics:
-      null_fraction: 0.75626
       dtype: object
+      null_fraction: 0.75626
+      cardinality: 3
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
     enum:
     - application_proposal
     - balance_sheet
@@ -132,64 +148,66 @@ models:
   - name: event_id
     type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1198.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 1198
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: uuid
   - name: event_type
     type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      34.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 34
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
   - name: event_version
     type: integer
     required: true
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      2. Observed range 1.0 to 2.0; mean 1.017529; std 0.131232; p95 1.0; p99 2.0.
     metrics:
-      null_fraction: 0.0
       dtype: int64
-      min: 1
-      max: 2
+      null_fraction: 0.0
+      cardinality: 2
+      min: 1.0
+      max: 2.0
       mean: 1.017529
-      stddev: 0.131232
-      p25: 1.0
-      p50: 1.0
-      p75: 1.0
+      std: 0.131232
       p95: 1.0
-    enum:
-    - 1
-    - 2
-    minimum: 1
-    maximum: 2
+      p99: 2.0
+    minimum: 1.0
+    maximum: 2.0
   - name: loan_purpose
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.976; distinct values
+      6.
     metrics:
-      null_fraction: 0.975793
       dtype: object
+      null_fraction: 0.975793
+      cardinality: 6
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
     enum:
     - acquisition
     - equipment_financing
@@ -198,109 +216,120 @@ models:
     - refinancing
     - working_capital
   - name: occurred_at
-    type: timestamp
+    type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      857.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 857
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: date-time
   - name: package_id
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.779; distinct values
+      29.
     metrics:
+      dtype: object
       null_fraction: 0.778798
-      dtype: object
+      cardinality: 29
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: uuid
   - name: recorded_at
-    type: timestamp
+    type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      828.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 828
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
+    format: date-time
   - name: requested_amount_usd
     type: number
     required: false
+    description: Auto-generated number field. Null fraction 0.976; distinct values
+      29. Observed range 247000.0 to 6349000.0; mean 1883931.034483; std 1384340.672917;
+      p95 4786200.0; p99 6182120.0.
     metrics:
-      null_fraction: 0.975793
       dtype: float64
+      null_fraction: 0.975793
+      cardinality: 29
       min: 247000.0
       max: 6349000.0
       mean: 1883931.034483
-      stddev: 1384340.672917
-      p25: 1019000.0
-      p50: 1447000.0
-      p75: 2615000.0
+      std: 1384340.672917
       p95: 4786200.0
+      p99: 6182120.0
     minimum: 247000.0
     maximum: 6349000.0
   - name: sequence_number
     type: integer
     required: true
+    description: Auto-generated integer field. Null fraction 0.000; distinct values
+      13. Observed range 1.0 to 13.0; mean 5.335559; std 3.242444; p95 11.0; p99 13.0.
     metrics:
-      null_fraction: 0.0
       dtype: int64
-      min: 1
-      max: 13
+      null_fraction: 0.0
+      cardinality: 13
+      min: 1.0
+      max: 13.0
       mean: 5.335559
-      stddev: 3.242444
-      p25: 3.0
-      p50: 5.0
-      p75: 8.0
+      std: 3.242444
       p95: 11.0
-    minimum: 1
-    maximum: 13
+      p99: 13.0
+    minimum: 1.0
+    maximum: 13.0
   - name: source_system
     type: string
     required: true
+    description: Auto-generated string field. Null fraction 0.000; distinct values
+      1.
     metrics:
-      null_fraction: 0.0
       dtype: object
+      null_fraction: 0.0
+      cardinality: 1
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
     enum:
     - week5_events
   - name: submission_channel
     type: string
     required: false
+    description: Auto-generated string field. Null fraction 0.976; distinct values
+      4.
     metrics:
-      null_fraction: 0.975793
       dtype: object
+      null_fraction: 0.975793
+      cardinality: 4
       min: null
       max: null
       mean: null
-      stddev: null
-      p25: null
-      p50: null
-      p75: null
+      std: null
       p95: null
+      p99: null
     enum:
     - agent
     - branch

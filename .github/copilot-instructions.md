@@ -3,8 +3,8 @@
 ## Repository-Specific Context
 
 - Before starting implementation or analysis for this repository, check the `rubric/` folder for the challenge explanation document.
-- The current challenge brief is `rubric/TRP1 Challenge Week 7_ Data Contract Enforcer (1).docx`.
-- Use the rubric document as a primary source for challenge requirements, expected deliverables, and grading context.
+- The current rubric files are `rubric/TRP1 Challenge Week 7_ Data Contract Enforcer (1).docx` and `rubric/TRP1 Practitioner Manual_ Data Contract Enforcer (1).docx`.
+- Use both rubric documents as primary sources for challenge requirements, expected deliverables, grading context, and practitioner guidance.
 - If implementation or analysis needs information from previous weeks, use the corresponding repositories under `repos/` as the source of truth.
 - If there is any mismatch between `repos/weekN` source material and derived files under `outputs/`, prefer `repos/weekN` as authoritative and treat `outputs/` as generated artifacts.
 

@@ -62,10 +62,6 @@ models:
     data_type: integer
     tests:
     - not_null
-    - accepted_values:
-        values:
-        - 1
-        - 2
   - name: loan_purpose
     description: Auto-generated from events.jsonl
     data_type: string
@@ -80,7 +76,7 @@ models:
         - working_capital
   - name: occurred_at
     description: Auto-generated from events.jsonl
-    data_type: timestamp
+    data_type: string
     tests:
     - not_null
   - name: package_id
@@ -88,7 +84,7 @@ models:
     data_type: string
   - name: recorded_at
     description: Auto-generated from events.jsonl
-    data_type: timestamp
+    data_type: string
     tests:
     - not_null
   - name: requested_amount_usd

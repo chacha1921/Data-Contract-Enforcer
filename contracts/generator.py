@@ -1,641 +1,594 @@
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
 import json
 import re
-import sys
-import types
+import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-LINEAGE_INJECTION_PATH = PROJECT_ROOT / "outputs" / "week4" / "lineage_snapshots.jsonl"
-PERCENTILE_FIELDS = {
-	"p25": ("25%", 0.25),
-	"p50": ("50%", 0.50),
-	"p75": ("75%", 0.75),
-	"p95": ("95%", 0.95),
-}
+DEFAULT_LINEAGE_PATH = PROJECT_ROOT / "outputs" / "week4" / "lineage_snapshots.jsonl"
+DEFAULT_REGISTRY_PATH = PROJECT_ROOT / "contract_registry" / "subscriptions.yaml"
+DEFAULT_EXPLODE_FIELDS = {"extracted_facts", "nodes", "edges"}
 
 
 def parse_args() -> argparse.Namespace:
-	parser = argparse.ArgumentParser(
-		description="Generate Bitol and dbt contracts from profiled JSONL data."
-	)
-	parser.add_argument("--source", required=True, help="Path to the source JSONL file.")
-	parser.add_argument(
-		"--contract-id", required=False, help="Unique identifier for the generated contract."
-	)
-	parser.add_argument(
-		"--lineage",
-		required=False,
-		help="Path to a lineage snapshot file or directory containing snapshots.",
-	)
-	parser.add_argument(
-		"--output",
-		required=True,
-		help="Output directory or explicit Bitol YAML file path.",
-	)
-	return parser.parse_args()
-
-
-def default_lineage_path() -> Path:
-	return LINEAGE_INJECTION_PATH
-
-
-def derive_contract_id(source_path: Path) -> str:
-	parts = [source_path.parent.name, source_path.stem]
-	return slugify("_".join(part for part in parts if part))
-
-
-def load_records(source_path: Path) -> list[dict[str, Any]]:
-	if not source_path.exists():
-		raise FileNotFoundError(f"Source file not found: {source_path}")
-
-	if source_path.suffix == ".json":
-		payload = json.loads(source_path.read_text(encoding="utf-8"))
-		if isinstance(payload, list):
-			return [item for item in payload if isinstance(item, dict)]
-		if isinstance(payload, dict):
-			return [payload]
-		raise ValueError("JSON source must contain an object or a list of objects.")
-
-	records: list[dict[str, Any]] = []
-	with source_path.open("r", encoding="utf-8") as handle:
-		for line_number, line in enumerate(handle, start=1):
-			raw_line = line.strip()
-			if not raw_line:
-				continue
-			record = json.loads(raw_line)
-			if not isinstance(record, dict):
-				raise ValueError(
-					f"Expected object per line in JSONL source, found {type(record).__name__} at line {line_number}."
-				)
-			records.append(record)
-	return records
-
-
-def normalize_scalar(value: Any) -> Any:
-	if isinstance(value, (dict, list)):
-		return json.dumps(value, sort_keys=True)
-	return value
-
-
-def flatten_record(
-	payload: dict[str, Any],
-	parent_key: str = "",
-	separator: str = "__",
-) -> dict[str, Any]:
-	flattened: dict[str, Any] = {}
-	for key, value in payload.items():
-		composite_key = f"{parent_key}{separator}{key}" if parent_key else str(key)
-		if isinstance(value, dict):
-			flattened.update(flatten_record(value, composite_key, separator))
-			continue
-		flattened[composite_key] = normalize_scalar(value)
-	return flattened
-
-
-def flatten_for_profile(records: list[dict[str, Any]]) -> pd.DataFrame:
-	flattened_rows: list[dict[str, Any]] = []
-
-	for record in records:
-		base_record = dict(record)
-		extracted_facts = base_record.pop("extracted_facts", None)
-		base_flat = flatten_record(base_record)
-
-		if isinstance(extracted_facts, list) and extracted_facts:
-			for fact_index, fact in enumerate(extracted_facts):
-				fact_payload = fact if isinstance(fact, dict) else {"value": fact}
-				fact_flat = flatten_record({"extracted_facts": fact_payload})
-				row = {
-					**base_flat,
-					**fact_flat,
-					"extracted_facts__fact_index": fact_index,
-				}
-				flattened_rows.append(row)
-			continue
-
-		if isinstance(extracted_facts, list):
-			flattened_rows.append({**base_flat, "extracted_facts__fact_count": 0})
-			continue
-
-		if extracted_facts is not None:
-			fact_payload = extracted_facts if isinstance(extracted_facts, dict) else {"value": extracted_facts}
-			flattened_rows.append({**base_flat, **flatten_record({"extracted_facts": fact_payload})})
-			continue
-
-		flattened_rows.append(base_flat)
-
-	if not flattened_rows:
-		return pd.DataFrame()
-	return pd.DataFrame(flattened_rows)
-
-
-def infer_contract_type(series: pd.Series) -> str:
-	non_null = series.dropna()
-	if non_null.empty:
-		return "string"
-
-	if pd.api.types.is_bool_dtype(series):
-		return "boolean"
-	if pd.api.types.is_integer_dtype(series):
-		return "integer"
-	if pd.api.types.is_float_dtype(series):
-		return "number"
-	if pd.api.types.is_datetime64_any_dtype(series):
-		return "timestamp"
-
-	numeric_values = pd.to_numeric(non_null, errors="coerce")
-	if numeric_values.notna().all():
-		return "integer" if np.allclose(numeric_values % 1, 0, equal_nan=True) else "number"
-
-	lowered = non_null.astype(str).str.lower()
-	if lowered.isin({"true", "false"}).all():
-		return "boolean"
-
-	datetime_values = pd.to_datetime(non_null, errors="coerce", utc=True)
-	if datetime_values.notna().all():
-		return "timestamp"
-
-	return "string"
-
-
-def round_metric(value: Any) -> float | int | None:
-	if value is None:
-		return None
-	if isinstance(value, (np.floating, float)):
-		if np.isnan(value):
-			return None
-		return round(float(value), 6)
-	if isinstance(value, (np.integer, int)):
-		return int(value)
-	return value
-
-
-def ensure_pkg_resources_shim() -> None:
-	try:
-		import pkg_resources  # type: ignore # noqa: F401
-		return
-	except ModuleNotFoundError:
-		pass
-
-	shim = types.ModuleType("pkg_resources")
-
-	class Distribution:
-		def __init__(self, package_name: str):
-			self.version = importlib.metadata.version(package_name)
-
-	def get_distribution(package_name: str) -> Distribution:
-		return Distribution(package_name)
-
-	shim.get_distribution = get_distribution  # type: ignore[attr-defined]
-	sys.modules["pkg_resources"] = shim
-
-
-def extract_ydata_variable_stats(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
-	if frame.empty:
-		return {}
-
-	ensure_pkg_resources_shim()
-
-	try:
-		from ydata_profiling import ProfileReport
-	except Exception:
-		return {}
-
-	try:
-		profile = ProfileReport(frame, minimal=True, progress_bar=False, correlations=None)
-		description = profile.get_description()
-	except Exception:
-		return {}
-
-	variables = getattr(description, "variables", None)
-	if variables is None and isinstance(description, dict):
-		variables = description.get("variables", {})
-	return variables if isinstance(variables, dict) else {}
-
-
-def fallback_percentiles(numeric_values: pd.Series) -> dict[str, float | int | None]:
-	if numeric_values.empty:
-		return {name: None for name in PERCENTILE_FIELDS}
-
-	return {
-		name: round_metric(numeric_values.quantile(quantile))
-		for name, (_, quantile) in PERCENTILE_FIELDS.items()
-	}
-
-
-def compute_numeric_metrics(
-	series: pd.Series,
-	variable_stats: dict[str, Any] | None = None,
-) -> dict[str, float | int | None]:
-	numeric_values = pd.to_numeric(series.dropna(), errors="coerce").dropna()
-	if numeric_values.empty:
-		return {
-			"min": None,
-			"max": None,
-			"mean": None,
-			"stddev": None,
-			**{name: None for name in PERCENTILE_FIELDS},
-		}
-
-	percentiles = fallback_percentiles(numeric_values)
-	if variable_stats:
-		for metric_name, (profile_key, _) in PERCENTILE_FIELDS.items():
-			if profile_key in variable_stats:
-				percentiles[metric_name] = round_metric(variable_stats.get(profile_key))
-
-	return {
-		"min": round_metric(numeric_values.min()),
-		"max": round_metric(numeric_values.max()),
-		"mean": round_metric(numeric_values.mean()),
-		"stddev": round_metric(numeric_values.std(ddof=0)),
-		**percentiles,
-	}
-
-
-def profile_dataframe(frame: pd.DataFrame) -> list[dict[str, Any]]:
-	variable_stats = extract_ydata_variable_stats(frame)
-	profiles: list[dict[str, Any]] = []
-	for column in frame.columns:
-		series = frame[column]
-		contract_type = infer_contract_type(series)
-		unique_non_null = [value for value in series.dropna().unique().tolist()]
-		profiles.append(
-			{
-				"name": column,
-				"type": contract_type,
-				"pandas_dtype": str(series.dtype),
-				"null_fraction": round(float(series.isna().mean()), 6),
-				"row_count": int(len(series)),
-				"unique_count": int(series.nunique(dropna=True)),
-				"accepted_values": accepted_values_candidate(unique_non_null),
-				**compute_numeric_metrics(series, variable_stats.get(column)),
-			}
-		)
-	return sorted(profiles, key=lambda item: item["name"])
-
-
-def accepted_values_candidate(values: list[Any]) -> list[Any] | None:
-	if not values:
-		return None
-
-	normalized_values = [to_yaml_scalar(value) for value in values]
-	if len(normalized_values) <= 10:
-		return sorted(normalized_values, key=lambda item: str(item))
-	return None
-
-
-def to_yaml_scalar(value: Any) -> Any:
-	if isinstance(value, (np.integer, int)):
-		return int(value)
-	if isinstance(value, (np.floating, float)):
-		if np.isnan(value):
-			return None
-		return float(value)
-	if isinstance(value, (np.bool_, bool)):
-		return bool(value)
-	return value
-
-
-def map_profile_to_contract_field(profile: dict[str, Any]) -> dict[str, Any]:
-	field: dict[str, Any] = {
-		"name": profile["name"],
-		"type": profile["type"],
-		"required": profile["null_fraction"] == 0,
-		"metrics": {
-			"null_fraction": profile["null_fraction"],
-			"dtype": profile["pandas_dtype"],
-			"min": profile["min"],
-			"max": profile["max"],
-			"mean": profile["mean"],
-			"stddev": profile["stddev"],
-			"p25": profile["p25"],
-			"p50": profile["p50"],
-			"p75": profile["p75"],
-			"p95": profile["p95"],
-		},
-	}
-
-	if profile["accepted_values"]:
-		field["enum"] = profile["accepted_values"]
-
-	if profile["type"] in {"integer", "number"}:
-		if profile["min"] is not None:
-			field["minimum"] = profile["min"]
-		if profile["max"] is not None:
-			field["maximum"] = profile["max"]
-
-	if "confidence" in profile["name"].lower():
-		field["minimum"] = 0.0
-		field["maximum"] = 1.0
-
-	return field
+    """Parse CLI arguments for the four-stage contract generator."""
+    parser = argparse.ArgumentParser(
+        description="Generate Bitol and dbt contracts from profiled JSONL data."
+    )
+    parser.add_argument("--source", required=True, help="Path to the source JSONL or JSON file.")
+    parser.add_argument(
+        "--contract-id",
+        required=False,
+        help="Optional contract identifier. Defaults to a slug derived from the source path.",
+    )
+    parser.add_argument(
+        "--lineage",
+        required=False,
+        default=str(DEFAULT_LINEAGE_PATH),
+        help="Path to a Week 4 lineage JSONL/JSON/YAML file or directory of snapshots.",
+    )
+    parser.add_argument(
+        "--registry",
+        required=False,
+        default=str(DEFAULT_REGISTRY_PATH),
+        help="Path to the contract registry subscriptions YAML file.",
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Output directory or explicit Bitol YAML file path.",
+    )
+    return parser.parse_args()
 
 
 def slugify(value: str) -> str:
-	normalized = re.sub(r"[^a-zA-Z0-9]+", "_", value).strip("_").lower()
-	return normalized or "contract"
+    """Convert arbitrary identifiers into stable, file-safe slugs."""
+    normalized = re.sub(r"[^a-zA-Z0-9]+", "_", value).strip("_").lower()
+    return normalized or "contract"
 
 
-def parse_snapshot_file(snapshot_path: Path) -> Any:
-	raw_text = snapshot_path.read_text(encoding="utf-8").strip()
-	if not raw_text:
-		return None
-
-	if snapshot_path.suffix == ".jsonl":
-		last_payload: Any = None
-		for line in raw_text.splitlines():
-			stripped = line.strip()
-			if stripped:
-				last_payload = json.loads(stripped)
-		return last_payload
-
-	return yaml.safe_load(raw_text)
+def derive_contract_id(source_path: Path) -> str:
+    """Create a default contract id from the dataset location."""
+    parts = [source_path.parent.name, source_path.stem]
+    return slugify("_".join(part for part in parts if part))
 
 
-def latest_jsonl_payload(snapshot_path: Path) -> Any:
-	if not snapshot_path.exists():
-		return None
+def load_records(source_path: Path) -> list[dict[str, Any]]:
+    """Load JSON or JSONL records into a list of dictionaries."""
+    if not source_path.exists():
+        raise FileNotFoundError(f"Source file not found: {source_path}")
 
-	raw_text = snapshot_path.read_text(encoding="utf-8").strip()
-	if not raw_text:
-		return None
+    if source_path.suffix.lower() == ".json":
+        payload = json.loads(source_path.read_text(encoding="utf-8"))
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+        if isinstance(payload, dict):
+            return [payload]
+        raise ValueError("JSON source must contain an object or a list of objects.")
 
-	last_payload: Any = None
-	for line in raw_text.splitlines():
-		stripped = line.strip()
-		if stripped:
-			last_payload = json.loads(stripped)
-	return last_payload
-
-
-def normalize_consumers(values: Any) -> list[str]:
-	if isinstance(values, str):
-		return [values]
-	if not isinstance(values, list):
-		return []
-
-	consumers: list[str] = []
-	for item in values:
-		if isinstance(item, str):
-			consumers.append(item)
-			continue
-		if isinstance(item, dict):
-			for key in ("name", "id", "consumer", "target"):
-				if item.get(key):
-					consumers.append(str(item[key]))
-					break
-	return consumers
+    records: list[dict[str, Any]] = []
+    with source_path.open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            raw_line = line.strip()
+            if not raw_line:
+                continue
+            payload = json.loads(raw_line)
+            if not isinstance(payload, dict):
+                raise ValueError(
+                    f"Expected one JSON object per line in {source_path} at line {line_number}."
+                )
+            records.append(payload)
+    return records
 
 
-def extract_downstream_consumers(payload: Any) -> list[str]:
-	if payload is None:
-		return []
-
-	if isinstance(payload, dict):
-		for key in ("downstream_consumers", "downstreamConsumers", "consumers"):
-			if key in payload:
-				consumers = normalize_consumers(payload[key])
-				if consumers:
-					return consumers
-		for value in payload.values():
-			consumers = extract_downstream_consumers(value)
-			if consumers:
-				return consumers
-
-	if isinstance(payload, list):
-		for item in payload:
-			consumers = extract_downstream_consumers(item)
-			if consumers:
-				return consumers
-
-	return []
+def normalize_scalar(value: Any) -> Any:
+    """Convert nested non-exploded structures into stable scalars for profiling."""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True, ensure_ascii=False)
+    return value
 
 
-def load_downstream_consumers(lineage_path: Path) -> tuple[list[str], str | None]:
-	if not lineage_path.exists():
-		return [], None
-
-	if lineage_path.is_file():
-		payload = parse_snapshot_file(lineage_path)
-		return extract_downstream_consumers(payload), lineage_path.name
-
-	candidate_files = sorted(
-		[
-			path
-			for path in lineage_path.rglob("*")
-			if path.is_file() and path.suffix.lower() in {".yaml", ".yml", ".json", ".jsonl"}
-		],
-		key=lambda path: (path.stat().st_mtime, path.name),
-		reverse=True,
-	)
-
-	for candidate in candidate_files:
-		payload = parse_snapshot_file(candidate)
-		consumers = extract_downstream_consumers(payload)
-		if consumers:
-			return consumers, str(candidate.relative_to(lineage_path))
-
-	if candidate_files:
-		return [], str(candidate_files[0].relative_to(lineage_path))
-	return [], None
+def flatten_object(
+    payload: dict[str, Any], parent_key: str = "", separator: str = "__"
+) -> dict[str, Any]:
+    """Recursively flatten a nested dictionary using Bitol/dbt-friendly field names."""
+    flattened: dict[str, Any] = {}
+    for key, value in payload.items():
+        composite_key = f"{parent_key}{separator}{key}" if parent_key else str(key)
+        if isinstance(value, dict):
+            flattened.update(flatten_object(value, composite_key, separator))
+        else:
+            flattened[composite_key] = normalize_scalar(value)
+    return flattened
 
 
-def extract_edge_endpoint(endpoint: Any) -> str | None:
-	if isinstance(endpoint, str) and endpoint.strip():
-		return endpoint.strip()
-	if isinstance(endpoint, dict):
-		for key in ("id", "name", "system", "node", "dataset", "service"):
-			value = endpoint.get(key)
-			if isinstance(value, str) and value.strip():
-				return value.strip()
-	return None
+def expand_list_field(field_name: str, values: list[Any]) -> list[dict[str, Any]]:
+    """Explode array values like Week 3 extracted_facts and Week 4 nodes/edges."""
+    if not values:
+        return [{f"{field_name}__count": 0}]
+
+    rows: list[dict[str, Any]] = []
+    for index, item in enumerate(values):
+        if isinstance(item, dict):
+            flattened_item = flatten_object(item, field_name)
+            flattened_item[f"{field_name}__index"] = index
+            rows.append(flattened_item)
+        else:
+            rows.append(
+                {
+                    f"{field_name}__value": normalize_scalar(item),
+                    f"{field_name}__index": index,
+                }
+            )
+    return rows
 
 
-def collect_lineage_edges(payload: Any) -> list[dict[str, Any]]:
-	edges: list[dict[str, Any]] = []
-	if isinstance(payload, dict):
-		if any(key in payload for key in ("source", "from")) and any(key in payload for key in ("target", "to")):
-			edges.append(payload)
-		for value in payload.values():
-			edges.extend(collect_lineage_edges(value))
-	elif isinstance(payload, list):
-		for item in payload:
-			edges.extend(collect_lineage_edges(item))
-	return edges
+def flatten_records(
+    records: list[dict[str, Any]],
+    explode_fields: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Flatten records for profiling.
+
+    Arrays listed in explode_fields are exploded into one row per nested item so that
+    fields like extracted_facts__confidence and edges__target can be profiled directly.
+    """
+    explode_fields = explode_fields or set(DEFAULT_EXPLODE_FIELDS)
+    flattened_rows: list[dict[str, Any]] = []
+
+    for record in records:
+        row_variants: list[dict[str, Any]] = [{}]
+        for key, value in record.items():
+            if isinstance(value, dict):
+                flattened_value = flatten_object(value, str(key))
+                row_variants = [{**row, **flattened_value} for row in row_variants]
+                continue
+
+            if isinstance(value, list) and str(key) in explode_fields:
+                expanded_rows = expand_list_field(str(key), value)
+                new_variants: list[dict[str, Any]] = []
+                for row in row_variants:
+                    for expanded in expanded_rows:
+                        new_variants.append({**row, **expanded})
+                row_variants = new_variants
+                continue
+
+            normalized_value = normalize_scalar(value)
+            row_variants = [{**row, str(key): normalized_value} for row in row_variants]
+
+        flattened_rows.extend(row_variants)
+
+    return flattened_rows
 
 
-def lineage_identifiers(contract_id: str, source_path: Path) -> set[str]:
-	identifiers = {
-		contract_id,
-		slugify(contract_id),
-		source_path.name,
-		source_path.stem,
-		str(source_path),
-		str(source_path.with_suffix("")),
-	}
-	return {identifier.lower() for identifier in identifiers if identifier}
+def flatten_for_profile(records: list[dict[str, Any]]) -> pd.DataFrame:
+    """Compatibility wrapper used by runner.py."""
+    rows = flatten_records(records)
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
 
 
-def load_injected_downstream(contract_id: str, source_path: Path) -> tuple[list[str], str | None]:
-	payload = latest_jsonl_payload(LINEAGE_INJECTION_PATH)
-	if payload is None:
-		return [], None
+def infer_type(dtype_str: str) -> str:
+    """Map pandas dtypes to Bitol types."""
+    mapping = {
+        "float64": "number",
+        "float32": "number",
+        "Float64": "number",
+        "int64": "integer",
+        "int32": "integer",
+        "Int64": "integer",
+        "bool": "boolean",
+        "boolean": "boolean",
+        "object": "string",
+        "string": "string",
+    }
+    return mapping.get(dtype_str, "string")
 
-	identifiers = lineage_identifiers(contract_id, source_path)
-	downstream_targets: list[str] = []
-	for edge in collect_lineage_edges(payload):
-		source_value = extract_edge_endpoint(edge.get("source", edge.get("from")))
-		target_value = extract_edge_endpoint(edge.get("target", edge.get("to")))
-		if source_value and target_value and source_value.lower() in identifiers:
-			downstream_targets.append(target_value)
 
-	return deduplicate(downstream_targets), str(LINEAGE_INJECTION_PATH.relative_to(PROJECT_ROOT))
+def safe_float(value: Any) -> float | None:
+    if value is None or pd.isna(value):
+        return None
+    return round(float(value), 6)
 
 
-def deduplicate(values: list[str]) -> list[str]:
-	seen: set[str] = set()
-	ordered: list[str] = []
-	for value in values:
-		if value not in seen:
-			seen.add(value)
-			ordered.append(value)
-	return ordered
+def profile_column(series: pd.Series, column_name: str) -> dict[str, Any]:
+    """Build structural and statistical profiles for a single flattened column."""
+    profile = {
+        "name": column_name,
+        "dtype": str(series.dtype),
+        "null_fraction": round(float(series.isna().mean()), 6),
+        "cardinality_estimate": int(series.nunique(dropna=True)),
+        "sample_values": [
+            normalize_scalar(value) for value in series.dropna().unique().tolist()[:8]
+        ],
+        "stats": {
+            "min": None,
+            "max": None,
+            "mean": None,
+            "std": None,
+            "p95": None,
+            "p99": None,
+        },
+    }
+
+    numeric_series = pd.to_numeric(series.dropna(), errors="coerce").dropna()
+    if not numeric_series.empty:
+        profile["dtype"] = str(numeric_series.dtype)
+        profile["stats"] = {
+            "min": safe_float(numeric_series.min()),
+            "max": safe_float(numeric_series.max()),
+            "mean": safe_float(numeric_series.mean()),
+            "std": safe_float(numeric_series.std(ddof=0)),
+            "p95": safe_float(numeric_series.quantile(0.95)),
+            "p99": safe_float(numeric_series.quantile(0.99)),
+        }
+
+    return profile
+
+
+def profile_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    """Profile all flattened columns in a dataframe."""
+    if frame.empty:
+        return []
+    return sorted(
+        (profile_column(frame[column], str(column)) for column in frame.columns),
+        key=lambda item: item["name"],
+    )
+
+
+def enum_values(profile: dict[str, Any], bitol_type: str) -> list[Any] | None:
+    """Only create enums for low-cardinality string columns, per the manual."""
+    if bitol_type != "string":
+        return None
+    if int(profile["cardinality_estimate"]) > 8:
+        return None
+    values = [value for value in profile.get("sample_values", []) if value is not None]
+    if not values:
+        return None
+    return sorted(values, key=lambda item: str(item))
+
+
+def describe_field(profile: dict[str, Any], bitol_type: str) -> str:
+    """Create a plain-English description so the contract reads well without code context."""
+    description = (
+        f"Auto-generated {bitol_type} field. Null fraction {profile['null_fraction']:.3f}; "
+        f"distinct values {profile['cardinality_estimate']}."
+    )
+    if bitol_type in {"number", "integer"}:
+        stats = profile["stats"]
+        description += (
+            f" Observed range {stats['min']} to {stats['max']}; "
+            f"mean {stats['mean']}; std {stats['std']}; p95 {stats['p95']}; p99 {stats['p99']}."
+        )
+    return description
+
+
+def column_to_clause(profile: dict[str, Any]) -> dict[str, Any]:
+    """Translate a column profile into Bitol field clauses."""
+    bitol_type = infer_type(str(profile["dtype"]))
+    clause: dict[str, Any] = {
+        "name": profile["name"],
+        "type": bitol_type,
+        "required": profile["null_fraction"] == 0.0,
+        "description": describe_field(profile, bitol_type),
+        "metrics": {
+            "dtype": profile["dtype"],
+            "null_fraction": profile["null_fraction"],
+            "cardinality": profile["cardinality_estimate"],
+            **profile["stats"],
+        },
+    }
+
+    enum = enum_values(profile, bitol_type)
+    if enum:
+        clause["enum"] = enum
+
+    if bitol_type in {"number", "integer"}:
+        if profile["stats"]["min"] is not None:
+            clause["minimum"] = profile["stats"]["min"]
+        if profile["stats"]["max"] is not None:
+            clause["maximum"] = profile["stats"]["max"]
+
+    field_name = str(profile["name"])
+    if field_name.endswith("_id") or field_name == "id":
+        clause["format"] = "uuid"
+    if field_name.endswith("_at"):
+        clause["format"] = "date-time"
+
+    if "confidence" in field_name.lower() and bitol_type == "number":
+        clause["minimum"] = 0.0
+        clause["maximum"] = 1.0
+        clause["description"] = (
+            "Confidence score. MUST remain in the 0.0-1.0 range. "
+            "A shift to a 0-100 percentage scale is a breaking change that downstream consumers must treat as incompatible."
+        )
+
+    return clause
+
+
+def parse_lineage_payload(path: Path) -> tuple[dict[str, Any] | list[Any] | None, str | None]:
+    """Load the latest lineage snapshot from a file or directory."""
+    if not path.exists():
+        return None, None
+
+    if path.is_dir():
+        candidates = sorted(
+            [
+                candidate
+                for candidate in path.rglob("*")
+                if candidate.is_file()
+                and candidate.suffix.lower() in {".json", ".jsonl", ".yaml", ".yml"}
+            ],
+            key=lambda candidate: candidate.stat().st_mtime,
+            reverse=True,
+        )
+        if not candidates:
+            return None, None
+        path = candidates[0]
+
+    if path.suffix.lower() == ".jsonl":
+        lines = [
+            line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+        ]
+        payload = json.loads(lines[-1]) if lines else None
+    else:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+
+    try:
+        relative = str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        relative = str(path)
+    return payload, relative
+
+
+def extract_source_identifiers(
+    contract_id: str, source_path: Path, records: list[dict[str, Any]]
+) -> set[str]:
+    """Build a robust identifier set for matching lineage sources to this contract."""
+    identifiers = {
+        contract_id,
+        slugify(contract_id),
+        source_path.stem,
+        f"{source_path.parent.name}_{source_path.stem}",
+    }
+    for record in records[:50]:
+        source_system = record.get("source_system")
+        if isinstance(source_system, str) and source_system.strip():
+            identifiers.add(source_system.strip())
+    return {identifier.lower() for identifier in identifiers if identifier}
+
+
+def lineage_downstream_nodes(
+    lineage_payload: dict[str, Any] | list[Any] | None,
+    contract_id: str,
+    source_path: Path,
+    records: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Pull downstream nodes for this contract from the latest Week 4 lineage snapshot."""
+    if not isinstance(lineage_payload, dict):
+        return []
+
+    edges = lineage_payload.get("edges", [])
+    if not isinstance(edges, list):
+        return []
+
+    identifiers = extract_source_identifiers(contract_id, source_path, records)
+    downstream: list[dict[str, Any]] = []
+    seen: set[tuple[str, str | None]] = set()
+
+    for edge in edges:
+        if not isinstance(edge, dict):
+            continue
+        source_value = edge.get("source") or edge.get("from")
+        target_value = edge.get("target") or edge.get("to")
+        relationship = edge.get("relationship")
+        if not isinstance(source_value, str) or not isinstance(target_value, str):
+            continue
+        if source_value.lower() not in identifiers:
+            continue
+        if relationship and str(relationship).upper() not in {"PRODUCES", "WRITES"}:
+            continue
+        key = (target_value, str(relationship) if relationship is not None else None)
+        if key in seen:
+            continue
+        seen.add(key)
+        downstream.append(
+            {
+                "node_id": target_value,
+                "relationship": relationship or "LINKED",
+            }
+        )
+
+    return downstream
+
+
+def normalize_contract_identity(value: str) -> str:
+    """Normalize ids so hyphen/underscore variants compare cleanly."""
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+def load_registry_subscribers(registry_path: Path, contract_id: str) -> list[str]:
+    """Filter the registry down to the subscribers declared for this contract."""
+    if not registry_path.exists():
+        return []
+
+    payload = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(payload, dict):
+        return []
+
+    subscriptions = payload.get("subscriptions", [])
+    if not isinstance(subscriptions, list):
+        return []
+
+    contract_key = normalize_contract_identity(contract_id)
+    subscribers: list[str] = []
+    for subscription in subscriptions:
+        if not isinstance(subscription, dict):
+            continue
+        subscription_contract = str(subscription.get("contract_id", ""))
+        if normalize_contract_identity(subscription_contract) != contract_key:
+            continue
+        subscriber_id = subscription.get("subscriber_id")
+        if isinstance(subscriber_id, str) and subscriber_id.strip():
+            subscribers.append(subscriber_id.strip())
+    return subscribers
+
+
+def make_relative_path(path: Path) -> str:
+    """Return project-relative paths when possible for human-readable YAML."""
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def build_bitol_contract(
-	contract_id: str,
-	source_path: Path,
-	profiles: list[dict[str, Any]],
-	downstream_consumers: list[str],
-	lineage_snapshot: str | None,
-	injected_lineage_snapshot: str | None,
+    contract_id: str,
+    source_path: Path,
+    profiles: list[dict[str, Any]],
+    lineage_snapshot_ref: str | None,
+    downstream_nodes: list[dict[str, Any]],
+    registry_path: Path,
+    registry_subscribers: list[str],
 ) -> dict[str, Any]:
-	model_name = slugify(contract_id)
-	return {
-		"dataContractSpecification": "1.1.0",
-		"id": contract_id,
-		"info": {
-			"title": contract_id,
-			"version": "1.0.0",
-			"description": f"Auto-generated from {source_path.name}",
-			"owner": "data-engineering",
-		},
-		"lineage": {
-			"source": str(source_path),
-			"lineage_snapshot": lineage_snapshot,
-			"injected_lineage_snapshot": injected_lineage_snapshot,
-			"downstream_consumers": downstream_consumers,
-		},
-		"downstream": downstream_consumers,
-		"models": [
-			{
-				"name": model_name,
-				"type": "table",
-				"fields": [map_profile_to_contract_field(profile) for profile in profiles],
-			}
-		],
-	}
+    """Assemble the final Bitol YAML document."""
+    return {
+        "dataContractSpecification": "1.1.0",
+        "id": contract_id,
+        "info": {
+            "title": contract_id,
+            "version": "1.0.0",
+            "description": f"Auto-generated contract for {source_path.name}",
+            "owner": "data-engineering",
+        },
+        "lineage": {
+            "source": make_relative_path(source_path),
+            "lineage_snapshot": lineage_snapshot_ref,
+            "registry": make_relative_path(registry_path),
+            "downstream_nodes_from_lineage": downstream_nodes,
+            "registry_subscribers": registry_subscribers,
+            "note": "Blast radius uses registry_subscribers as the primary source. Lineage nodes are enrichment only.",
+        },
+        "models": [
+            {
+                "name": slugify(contract_id),
+                "type": "table",
+                "fields": [column_to_clause(profile) for profile in profiles],
+            }
+        ],
+    }
 
 
 def build_dbt_schema(contract: dict[str, Any], source_path: Path) -> dict[str, Any]:
-	model_name = slugify(str(contract.get("id", source_path.stem)))
-	fields = []
-	for model in contract.get("models", []):
-		if isinstance(model, dict):
-			model_fields = model.get("fields", [])
-			if isinstance(model_fields, list):
-				fields.extend(field for field in model_fields if isinstance(field, dict))
+    """Emit a companion dbt schema.yml with tests for required and enum fields."""
+    models = contract.get("models", [])
+    model = models[0] if isinstance(models, list) and models else {}
+    fields = model.get("fields", []) if isinstance(model, dict) else []
+    columns: list[dict[str, Any]] = []
 
-	columns: list[dict[str, Any]] = []
-	for field in fields:
-		tests: list[Any] = []
-		if field.get("required") is True:
-			tests.append("not_null")
-		if field.get("enum"):
-			tests.append({"accepted_values": {"values": field["enum"]}})
+    for field in fields:
+        if not isinstance(field, dict):
+            continue
+        tests: list[Any] = []
+        if field.get("required") is True:
+            tests.append("not_null")
+        if field.get("enum"):
+            tests.append({"accepted_values": {"values": field["enum"]}})
 
-		column_entry: dict[str, Any] = {
-			"name": field["name"],
-			"description": f"Auto-generated from {source_path.name}",
-			"data_type": field.get("type", "string"),
-		}
-		if tests:
-			column_entry["tests"] = tests
-		columns.append(column_entry)
+        column_entry = {
+            "name": field["name"],
+            "description": f"Auto-generated from {source_path.name}",
+            "data_type": field.get("type", "string"),
+        }
+        if tests:
+            column_entry["tests"] = tests
+        columns.append(column_entry)
 
-	return {
-		"version": 2,
-		"models": [
-			{
-				"name": model_name,
-				"description": f"Generated schema contract for {contract.get('id', model_name)}",
-				"columns": columns,
-			}
-		],
-	}
+    return {
+        "version": 2,
+        "models": [
+            {
+                "name": slugify(str(contract.get("id", source_path.stem))),
+                "description": f"Generated schema contract for {contract.get('id', source_path.stem)}",
+                "columns": columns,
+            }
+        ],
+    }
 
 
 def resolve_output_paths(output_arg: str, contract_id: str) -> tuple[Path, Path]:
-	output_path = Path(output_arg)
-	dbt_output_path = PROJECT_ROOT / "generated_contracts" / f"{slugify(contract_id)}_dbt.yml"
-	dbt_output_path.parent.mkdir(parents=True, exist_ok=True)
-	if output_path.suffix.lower() in {".yaml", ".yml"}:
-		output_path.parent.mkdir(parents=True, exist_ok=True)
-		return output_path, dbt_output_path
+    """Resolve the primary Bitol YAML path and the companion dbt schema path."""
+    output_path = Path(output_arg)
+    file_slug = slugify(contract_id)
+    if output_path.suffix.lower() in {".yaml", ".yml"}:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        return output_path, output_path.parent / f"{file_slug}_dbt.yml"
 
-	output_path.mkdir(parents=True, exist_ok=True)
-	return output_path / f"{slugify(contract_id)}.yaml", dbt_output_path
+    output_path.mkdir(parents=True, exist_ok=True)
+    return output_path / f"{file_slug}.yaml", output_path / f"{file_slug}_dbt.yml"
 
 
 def write_yaml(target_path: Path, payload: dict[str, Any]) -> None:
-	target_path.write_text(
-		yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
-		encoding="utf-8",
-	)
+    """Write YAML using stable, human-friendly formatting."""
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+
+def write_snapshot(primary_contract_path: Path, contract_id: str) -> Path:
+    """Save a timestamped schema snapshot for future schema-evolution analysis."""
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    snapshot_dir = PROJECT_ROOT / "schema_snapshots" / contract_id
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_path = snapshot_dir / f"{timestamp}.yaml"
+    shutil.copyfile(primary_contract_path, snapshot_path)
+    return snapshot_path
 
 
 def main() -> None:
-	args = parse_args()
-	source_path = Path(args.source)
-	contract_id = args.contract_id or derive_contract_id(source_path)
-	lineage_path = Path(args.lineage) if args.lineage else default_lineage_path()
+    args = parse_args()
+    source_path = Path(args.source)
+    lineage_path = Path(args.lineage)
+    registry_path = Path(args.registry)
+    contract_id = args.contract_id or derive_contract_id(source_path)
 
-	records = load_records(source_path)
-	profiled_frame = flatten_for_profile(records)
-	profiles = profile_dataframe(profiled_frame)
-	downstream_consumers, lineage_snapshot = load_downstream_consumers(lineage_path)
-	injected_downstream, injected_lineage_snapshot = load_injected_downstream(
-		contract_id,
-		source_path,
-	)
-	all_downstream = deduplicate(downstream_consumers + injected_downstream)
+    records = load_records(source_path)
+    profile_frame = flatten_for_profile(records)
+    profiles = profile_records(profile_frame)
 
-	bitol_contract = build_bitol_contract(
-		contract_id=contract_id,
-		source_path=source_path,
-		profiles=profiles,
-		downstream_consumers=all_downstream,
-		lineage_snapshot=lineage_snapshot,
-		injected_lineage_snapshot=injected_lineage_snapshot,
-	)
-	dbt_schema = build_dbt_schema(bitol_contract, source_path)
-	bitol_path, dbt_path = resolve_output_paths(args.output, contract_id)
+    lineage_payload, lineage_snapshot_ref = parse_lineage_payload(lineage_path)
+    downstream_nodes = lineage_downstream_nodes(lineage_payload, contract_id, source_path, records)
+    registry_subscribers = load_registry_subscribers(registry_path, contract_id)
 
-	write_yaml(bitol_path, bitol_contract)
-	write_yaml(dbt_path, dbt_schema)
+    bitol_contract = build_bitol_contract(
+        contract_id=contract_id,
+        source_path=source_path,
+        profiles=profiles,
+        lineage_snapshot_ref=lineage_snapshot_ref,
+        downstream_nodes=downstream_nodes,
+        registry_path=registry_path,
+        registry_subscribers=registry_subscribers,
+    )
+    dbt_schema = build_dbt_schema(bitol_contract, source_path)
 
-	print(f"Wrote Bitol contract to {bitol_path}")
-	print(f"Wrote dbt schema to {dbt_path}")
+    bitol_path, dbt_path = resolve_output_paths(args.output, contract_id)
+    write_yaml(bitol_path, bitol_contract)
+    write_yaml(dbt_path, dbt_schema)
+    snapshot_path = write_snapshot(bitol_path, contract_id)
+
+    print(f"Wrote Bitol contract to {bitol_path}")
+    print(f"Wrote dbt schema to {dbt_path}")
+    print(f"Wrote schema snapshot to {snapshot_path}")
 
 
 if __name__ == "__main__":
-	main()
+    main()

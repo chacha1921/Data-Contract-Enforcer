@@ -21,6 +21,10 @@ models:
     data_type: string
     tests:
     - not_null
+    - accepted_values:
+        values:
+        - 2013-E.C-Audit-finding-information
+        - tax_expenditure_ethiopia_2021_22
   - name: domain_hint
     description: Auto-generated from extractions.jsonl
     data_type: string
@@ -35,18 +39,6 @@ models:
     data_type: number
     tests:
     - not_null
-    - accepted_values:
-        values:
-        - 0.9
-        - 0.95
-  - name: extracted_facts__fact_index
-    description: Auto-generated from extractions.jsonl
-    data_type: integer
-    tests:
-    - not_null
-    - accepted_values:
-        values:
-        - 0
   - name: extracted_facts__fact_type
     description: Auto-generated from extractions.jsonl
     data_type: string
@@ -55,9 +47,14 @@ models:
     - accepted_values:
         values:
         - text_block
+  - name: extracted_facts__index
+    description: Auto-generated from extractions.jsonl
+    data_type: integer
+    tests:
+    - not_null
   - name: extracted_facts__value
     description: Auto-generated from extractions.jsonl
-    data_type: string
+    data_type: number
     tests:
     - not_null
   - name: language
@@ -74,10 +71,6 @@ models:
     data_type: number
     tests:
     - not_null
-    - accepted_values:
-        values:
-        - 0.9
-        - 1.0
   - name: layout_complexity
     description: Auto-generated from extractions.jsonl
     data_type: string
@@ -103,7 +96,7 @@ models:
     - not_null
   - name: processed_at
     description: Auto-generated from extractions.jsonl
-    data_type: timestamp
+    data_type: string
     tests:
     - not_null
     - accepted_values:
@@ -115,10 +108,6 @@ models:
     data_type: number
     tests:
     - not_null
-    - accepted_values:
-        values:
-        - 38.539
-        - 63.7209
   - name: source_doc_id
     description: Auto-generated from extractions.jsonl
     data_type: string
@@ -152,6 +141,6 @@ models:
     - not_null
   - name: text_preview
     description: Auto-generated from extractions.jsonl
-    data_type: string
+    data_type: number
     tests:
     - not_null

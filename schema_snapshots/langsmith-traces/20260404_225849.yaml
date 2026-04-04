@@ -1,7 +1,7 @@
-kind: DataContract
-apiVersion: v3.0.0
-dataContractSpecification: 1.1.0
-id: langsmith-traces
+snapshot_version: '1.0'
+captured_at: '2026-04-04T22:58:49.734339+00:00'
+contract_id: langsmith-traces
+source_contract_path: generated_contracts/langsmith_traces.yaml
 info:
   title: LangSmith Traces — Runs
   version: 1.0.0
@@ -13,10 +13,6 @@ servers:
     type: local
     path: outputs/traces/runs.jsonl
     format: jsonl
-terms:
-  usage: Internal observability contract.
-  limitations: Token counts and cost metrics must remain numeric for monitoring and
-    reporting.
 schema:
   run_type:
     type: string
@@ -144,54 +140,6 @@ schema:
     - mean_near_lower_bound
     downstream_consumers:
     - week7-ai-contract-extension
-quality:
-  type: SodaChecks
-  specification:
-    checks for langsmith_traces:
-    - '- row_count >= 1'
-    - '- missing_count(run_type) = 0'
-    - '- missing_count(session_id) = 0'
-    - '- missing_count(source) = 0'
-    - '- missing_count(total_cost) = 0'
-    - '- min(total_cost) >= 0.0'
-    - '- max(total_cost) <= 0.0'
-    - '- missing_count(total_tokens) = 0'
-    - '- min(total_tokens) >= 0.0'
-    - '- max(total_tokens) <= 0.0'
-lineage:
-  source: outputs/traces/runs.jsonl
-  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
-  registry: contract_registry/subscriptions.yaml
-  upstream: []
-  downstream:
-  - id: week7-ai-contract-extension
-    description: Cost observability depends on stable numeric trace fields.; Trace
-      schema enforcement relies on stable trace/session correlation keys.
-    fields_consumed:
-    - run_type
-    - total_tokens
-    - total_cost
-    - session_id
-    breaking_if_changed:
-    - total_cost
-    - session_id
-    validation_mode: AUDIT
-  downstream_consumers_from_graph: []
-profiling:
-  engine: ydata-profiling
-  columns_profiled: 5
-  rows_profiled: 1
-  generated: true
-  numeric_baseline_file: schema_snapshots/numeric_column_baselines.json
-llm_annotations:
-- field: source
-  plain_english_description: 'source represented as string. Null fraction 0.000; distinct
-    values 1. Sample values: synthetic_bootstrap.'
-  validation_expression: source must remain semantically consistent within contract
-    langsmith-traces.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
 models:
 - name: langsmith_traces
   type: table
@@ -241,3 +189,22 @@ models:
     maximum: 0.0
     warning_annotations: *id011
     quality_flags: *id012
+lineage:
+  source: outputs/traces/runs.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  upstream: []
+  downstream:
+  - id: week7-ai-contract-extension
+    description: Cost observability depends on stable numeric trace fields.; Trace
+      schema enforcement relies on stable trace/session correlation keys.
+    fields_consumed:
+    - run_type
+    - total_tokens
+    - total_cost
+    - session_id
+    breaking_if_changed:
+    - total_cost
+    - session_id
+    validation_mode: AUDIT
+  downstream_consumers_from_graph: []

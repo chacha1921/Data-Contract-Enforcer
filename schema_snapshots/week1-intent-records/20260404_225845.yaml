@@ -1,7 +1,7 @@
-kind: DataContract
-apiVersion: v3.0.0
-dataContractSpecification: 1.1.0
-id: week1-intent-records
+snapshot_version: '1.0'
+captured_at: '2026-04-04T22:58:45.317085+00:00'
+contract_id: week1-intent-records
+source_contract_path: generated_contracts/week1_intent_records.yaml
 info:
   title: Week 1 Intent Records
   version: 1.0.0
@@ -13,10 +13,6 @@ servers:
     type: local
     path: outputs/week1/intent_records.jsonl
     format: jsonl
-terms:
-  usage: Internal workflow orchestration data contract.
-  limitations: Intent labels and source references must remain stable for downstream
-    workflow routing.
 schema:
   created_at:
     type: string
@@ -210,55 +206,6 @@ schema:
           std: null
           p95: null
           p99: null
-quality:
-  type: SodaChecks
-  specification:
-    checks for intent_records:
-    - '- row_count >= 1'
-    - '- missing_count(created_at) = 0'
-    - '- missing_count(description) = 0'
-    - '- missing_count(governance_tags) = 0'
-    - '- missing_count(intent_id) = 0'
-    - '- duplicate_count(intent_id) = 0'
-    - '- missing_count(code_refs__confidence) = 0'
-    - '- min(code_refs__confidence) >= 0.0'
-    - '- max(code_refs__confidence) <= 1.0'
-    - '- avg(code_refs__confidence) >= 0.0'
-    - '- avg(code_refs__confidence) <= 1.0'
-    - '- missing_count(code_refs__file) = 0'
-    - '- missing_count(code_refs__line_end) = 0'
-    - '- min(code_refs__line_end) >= 1.0'
-    - '- max(code_refs__line_end) <= 96.0'
-    - '- missing_count(code_refs__line_start) = 0'
-    - '- min(code_refs__line_start) >= 1.0'
-    - '- max(code_refs__line_start) <= 96.0'
-    - '- missing_count(code_refs__symbol) = 0'
-lineage:
-  source: outputs/week1/intent_records.jsonl
-  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
-  registry: contract_registry/subscriptions.yaml
-  upstream: []
-  downstream:
-  - id: week2-digital-courtroom
-    description: Week 2 verdict target_ref matching depends on target_ref resolving
-      to a Week 1 code reference file.; Intent-to-verdict linkage relies on stable
-      intent identifiers.
-    fields_consumed:
-    - code_refs.file
-    - code_refs.symbol
-    - intent_id
-    breaking_if_changed:
-    - code_refs.file
-    - intent_id
-    validation_mode: AUDIT
-  downstream_consumers_from_graph: []
-profiling:
-  engine: ydata-profiling
-  columns_profiled: 10
-  rows_profiled: 16
-  generated: true
-  numeric_baseline_file: schema_snapshots/numeric_column_baselines.json
-llm_annotations: []
 models:
 - name: intent_records
   type: table
@@ -341,3 +288,22 @@ models:
         description: 'symbol represented as string. Null fraction 0.000; distinct
           values 12. Sample values: mdmConfigSchema, MockNode, LanguageParser.'
         metrics: *id012
+lineage:
+  source: outputs/week1/intent_records.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  upstream: []
+  downstream:
+  - id: week2-digital-courtroom
+    description: Week 2 verdict target_ref matching depends on target_ref resolving
+      to a Week 1 code reference file.; Intent-to-verdict linkage relies on stable
+      intent identifiers.
+    fields_consumed:
+    - code_refs.file
+    - code_refs.symbol
+    - intent_id
+    breaking_if_changed:
+    - code_refs.file
+    - intent_id
+    validation_mode: AUDIT
+  downstream_consumers_from_graph: []

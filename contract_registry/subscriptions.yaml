@@ -9,8 +9,14 @@ subscriptions:
     breaking_fields:
       - field: code_refs.file
         reason: Week 2 verdict target_ref matching depends on target_ref resolving to a Week 1 code reference file.
+        contract_clauses:
+          - schema.code_refs.file.required
+          - schema.code_refs.file.type
       - field: intent_id
         reason: Intent-to-verdict linkage relies on stable intent identifiers.
+        contract_clauses:
+          - schema.intent_id.required
+          - schema.intent_id.type
     validation_mode: AUDIT
     registered_at: '2026-04-05T00:00:00Z'
     contact: week2-team@org.com
@@ -25,8 +31,20 @@ subscriptions:
     breaking_fields:
       - field: overall_verdict
         reason: LLM output schema validation relies on a stable verdict taxonomy.
+        contract_clauses:
+          - schema.overall_verdict.required
+          - schema.overall_verdict.type
+          - schema.overall_verdict.enum
       - field: target_ref
         reason: Output-schema validation checks the linkage back to upstream code references.
+        contract_clauses:
+          - schema.target_ref.required
+          - schema.target_ref.type
+      - field: confidence
+        reason: Downstream AI risk monitoring depends on stable numeric confidence baselines.
+        contract_clauses:
+          - schema.confidence.range
+          - schema.confidence.statistical_drift
     validation_mode: ENFORCE
     registered_at: '2026-04-05T00:00:00Z'
     contact: week7-team@org.com
@@ -40,11 +58,46 @@ subscriptions:
     breaking_fields:
       - field: extracted_facts.confidence
         reason: Confidence drives downstream ranking and a 0.0-1.0 to 0-100 scale shift breaks ordering.
+        contract_clauses:
+          - schema.extracted_facts.confidence.range
+          - schema.extracted_facts.confidence.statistical_drift
       - field: doc_id
         reason: Used as the primary identifier in downstream lineage and enrichment flows.
+        contract_clauses:
+          - schema.doc_id.required
+          - schema.doc_id.type
     validation_mode: ENFORCE
     registered_at: '2026-04-04T00:00:00Z'
     contact: week4-team@org.com
+  - contract_id: week3-document-refinery-extractions
+    subscriber_id: week7-ai-contract-extension
+    subscriber_team: week7
+    fields_consumed:
+      - doc_id
+      - source_doc_id
+      - text_preview
+      - extracted_facts.value
+    breaking_fields:
+      - field: doc_id
+        reason: Prompt-input metadata and AI risk correlation depend on a stable document identifier.
+        contract_clauses:
+          - schema.doc_id.required
+          - schema.doc_id.type
+      - field: source_doc_id
+        reason: Prompt metadata derivation depends on a stable source document identifier.
+        contract_clauses:
+          - schema.source_doc_id.type
+      - field: text_preview
+        reason: Prompt validation requires stable text preview strings for downstream AI checks.
+        contract_clauses:
+          - schema.text_preview.type
+      - field: extracted_facts.value
+        reason: Embedding drift checks depend on extracted fact payload text remaining string-compatible.
+        contract_clauses:
+          - schema.extracted_facts.value.type
+    validation_mode: ENFORCE
+    registered_at: '2026-04-05T00:00:00Z'
+    contact: week7-team@org.com
   - contract_id: week4-cartographer-lineage
     subscriber_id: week7-violation-attributor
     subscriber_team: week7
@@ -55,8 +108,14 @@ subscriptions:
     breaking_fields:
       - field: edges.target
         reason: Blast-radius enrichment depends on stable downstream node identities.
+        contract_clauses:
+          - schema.edges.target.required
+          - schema.edges.target.type
       - field: edges.source
         reason: Upstream-to-downstream traversal depends on stable lineage edge sources.
+        contract_clauses:
+          - schema.edges.source.required
+          - schema.edges.source.type
     validation_mode: AUDIT
     registered_at: '2026-04-05T00:00:00Z'
     contact: week7-team@org.com
@@ -72,10 +131,19 @@ subscriptions:
     breaking_fields:
       - field: event_type
         reason: Event-routing and contract clauses depend on stable event taxonomy.
+        contract_clauses:
+          - schema.event_type.required
+          - schema.event_type.type
       - field: event_version
         reason: Consumer event validation depends on stable event schema versions.
+        contract_clauses:
+          - schema.event_version.required
+          - schema.event_version.type
       - field: occurred_at
         reason: Temporal validation and lineage attribution rely on event timestamps.
+        contract_clauses:
+          - schema.occurred_at.type
+          - schema.occurred_at.format
     validation_mode: ENFORCE
     registered_at: '2026-04-05T00:00:00Z'
     contact: week7-team@org.com
@@ -90,8 +158,14 @@ subscriptions:
     breaking_fields:
       - field: total_cost
         reason: Cost observability depends on stable numeric trace fields.
+        contract_clauses:
+          - schema.total_cost.type
+          - schema.total_cost.statistical_drift
       - field: session_id
         reason: Trace schema enforcement relies on stable trace/session correlation keys.
+        contract_clauses:
+          - schema.session_id.required
+          - schema.session_id.type
     validation_mode: AUDIT
     registered_at: '2026-04-05T00:00:00Z'
     contact: week7-team@org.com

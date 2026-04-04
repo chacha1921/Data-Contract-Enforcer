@@ -1,7 +1,7 @@
-kind: DataContract
-apiVersion: v3.0.0
-dataContractSpecification: 1.1.0
-id: week5-ledger-events
+snapshot_version: '1.0'
+captured_at: '2026-04-04T22:58:48.973931+00:00'
+contract_id: week5-ledger-events
+source_contract_path: generated_contracts/week5_events.yaml
 info:
   title: Week 5 Ledger — Events
   version: 1.0.0
@@ -12,10 +12,6 @@ servers:
     type: local
     path: outputs/week5/events.jsonl
     format: jsonl
-terms:
-  usage: Internal event-stream contract.
-  limitations: Event timestamps and event taxonomy must remain stable for replay and
-    attribution.
 schema:
   aggregate_id:
     type: string
@@ -412,123 +408,6 @@ schema:
     downstream_consumers:
     - dbt_week5_events_model
     - operations_event_dashboard
-quality:
-  type: SodaChecks
-  specification:
-    checks for events:
-    - '- row_count >= 1'
-    - '- missing_count(aggregate_id) = 0'
-    - '- missing_count(aggregate_type) = 0'
-    - '- missing_count(event_id) = 0'
-    - '- missing_count(event_type) = 0'
-    - '- missing_count(event_version) = 0'
-    - '- min(event_version) >= 1.0'
-    - '- max(event_version) <= 2.0'
-    - '- missing_count(occurred_at) = 0'
-    - '- missing_count(recorded_at) = 0'
-    - '- min(requested_amount_usd) >= 247000.0'
-    - '- max(requested_amount_usd) <= 6349000.0'
-    - '- missing_count(sequence_number) = 0'
-    - '- min(sequence_number) >= 1.0'
-    - '- max(sequence_number) <= 13.0'
-    - '- missing_count(source_system) = 0'
-lineage:
-  source: outputs/week5/events.jsonl
-  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
-  registry: contract_registry/subscriptions.yaml
-  upstream: []
-  downstream:
-  - id: week7-schema-contract
-    description: Event-routing and contract clauses depend on stable event taxonomy.;
-      Consumer event validation depends on stable event schema versions.; Temporal
-      validation and lineage attribution rely on event timestamps.
-    fields_consumed:
-    - event_id
-    - aggregate_id
-    - event_type
-    - occurred_at
-    - event_version
-    breaking_if_changed:
-    - event_type
-    - event_version
-    - occurred_at
-    validation_mode: ENFORCE
-  downstream_consumers_from_graph:
-  - node_id: operations_event_dashboard
-    relationship: LINKED
-  - node_id: dbt_week5_events_model
-    relationship: LINKED
-profiling:
-  engine: ydata-profiling
-  columns_profiled: 18
-  rows_profiled: 1198
-  generated: true
-  numeric_baseline_file: schema_snapshots/numeric_column_baselines.json
-llm_annotations:
-- field: aggregate_id
-  plain_english_description: 'Identifier for the event-sourced aggregate that emitted
-    the event. Sample values: loan-APEX-0001, docpkg-APEX-0001, loan-APEX-0002.'
-  validation_expression: aggregate_id must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: applicant_id
-  plain_english_description: 'applicant_id represented as string. Null fraction 0.964;
-    distinct values 26. Sample values: COMP-074, COMP-041, COMP-031.'
-  validation_expression: applicant_id must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: application_id
-  plain_english_description: 'application_id represented as string. Null fraction
-    0.465; distinct values 29. Sample values: APEX-0001, APEX-0002, APEX-0003.'
-  validation_expression: application_id must remain semantically consistent within
-    contract week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: document_id
-  plain_english_description: 'document_id represented as string. Null fraction 0.741;
-    distinct values 146. Sample values: doc-f2526123, doc-bf075eda, doc-648a7509.'
-  validation_expression: document_id must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: event_type
-  plain_english_description: 'Business event name emitted by the Week 5 ledger stream.
-    Sample values: ApplicationSubmitted, DocumentUploadRequested, PackageCreated.'
-  validation_expression: event_type must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: occurred_at
-  plain_english_description: 'Timestamp when the event occurred in the source workflow.
-    Sample values: 2026-03-04T19:35:47.578271, 2026-03-11T19:35:47.578271, 2026-03-04T19:36:07.578271.'
-  validation_expression: occurred_at must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: package_id
-  plain_english_description: 'package_id represented as string. Null fraction 0.779;
-    distinct values 29. Sample values: APEX-0001, APEX-0002, APEX-0003.'
-  validation_expression: package_id must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
-- field: recorded_at
-  plain_english_description: 'Timestamp when the event was recorded in the ledger.
-    Sample values: 2026-03-04T19:35:47.578271, 2026-03-04T19:36:07.578271, 2026-03-10T19:36:47.579523.'
-  validation_expression: recorded_at must remain semantically consistent within contract
-    week5-ledger-events.
-  cross_column_relationship: Review alongside adjacent metadata columns during contract
-    review.
-  source: heuristic_fallback
 models:
 - name: events
   type: table
@@ -659,3 +538,29 @@ models:
       values 4. Sample values: branch, web, mobile.'
     metrics: *id023
     enum: *id024
+lineage:
+  source: outputs/week5/events.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  upstream: []
+  downstream:
+  - id: week7-schema-contract
+    description: Event-routing and contract clauses depend on stable event taxonomy.;
+      Consumer event validation depends on stable event schema versions.; Temporal
+      validation and lineage attribution rely on event timestamps.
+    fields_consumed:
+    - event_id
+    - aggregate_id
+    - event_type
+    - occurred_at
+    - event_version
+    breaking_if_changed:
+    - event_type
+    - event_version
+    - occurred_at
+    validation_mode: ENFORCE
+  downstream_consumers_from_graph:
+  - node_id: operations_event_dashboard
+    relationship: LINKED
+  - node_id: dbt_week5_events_model
+    relationship: LINKED

@@ -1,0 +1,1293 @@
+kind: DataContract
+apiVersion: v3.0.0
+dataContractSpecification: 1.1.0
+id: week2-verdict-records
+info:
+  title: Week 2 Digital Courtroom — Verdict Records
+  version: 1.0.0
+  description: Structured verdict records emitted by the Week 2 courtroom evaluation
+    pipeline.
+  owner: week2-team
+servers:
+  local:
+    type: local
+    path: outputs/week2/verdicts.jsonl
+    format: jsonl
+terms:
+  usage: Internal evaluation and AI quality monitoring contract.
+  limitations: Verdict taxonomy, target references, and confidence scores must remain
+    stable for downstream monitoring.
+schema:
+  confidence:
+    type: number
+    required: true
+    description: Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking
+      change.
+    metrics: &id001
+      dtype: float64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 0.86
+      max: 0.86
+      mean: 0.86
+      p25: 0.86
+      p50: 0.86
+      p75: 0.86
+      std: 0.0
+      p95: 0.86
+      p99: 0.86
+    minimum: 0.0
+    maximum: 1.0
+    downstream_consumers:
+    - week7-ai-contract-extension
+  evaluated_at:
+    type: string
+    required: true
+    description: 'evaluated_at represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: 2026-03-01T00:19:19.906242Z.'
+    metrics: &id002
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: 9999-99-99A99:99:99.999999A
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    format: date-time
+    downstream_consumers: []
+  overall_score:
+    type: number
+    required: true
+    description: 'overall_score represented as number. Null fraction 0.000; distinct
+      values 1. Sample values: 4.8. Observed range 4.8 to 4.8; mean 4.8; p25 4.8;
+      p50 4.8; p75 4.8; std 0.0; p95 4.8; p99 4.8.'
+    metrics: &id003
+      dtype: float64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 4.8
+      max: 4.8
+      mean: 4.8
+      p25: 4.8
+      p50: 4.8
+      p75: 4.8
+      std: 0.0
+      p95: 4.8
+      p99: 4.8
+    minimum: 4.8
+    maximum: 4.8
+    downstream_consumers:
+    - week7-ai-contract-extension
+  overall_verdict:
+    type: string
+    required: true
+    description: 'overall_verdict represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: PASS.'
+    metrics: &id004
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id005
+    - PASS
+    downstream_consumers:
+    - week7-ai-contract-extension
+  rubric_id:
+    type: string
+    required: true
+    description: 'rubric_id represented as string. Null fraction 0.000; distinct values
+      1. Sample values: 63a61ad87a88cd0f38e79b8b0152edd717600073101e3....'
+    metrics: &id006
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: 99A99AA99A99AA9A99A99A9A9999AAA999999999999A999999AA9A9A9A99A99A
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id007
+    - 63a61ad87a88cd0f38e79b8b0152edd717600073101e391024eb0f1f4f11d87e
+    downstream_consumers: []
+    unique: true
+  rubric_version:
+    type: string
+    required: true
+    description: 'rubric_version represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: 3.0.0.'
+    metrics: &id008
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: 9.9.9
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id009
+    - 3.0.0
+    downstream_consumers: []
+  scores__Architectural Diagram Analysis__evidence:
+    type: string
+    required: true
+    description: 'scores -> Architectural Diagram Analysis -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["submission_report.md
+      contains a Mermaid arc....'
+    metrics: &id010
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAAAAAA_AAAAAA.AA AAAAAAAA A AAAAAAA AAAAAAAAAAAA
+        AAAAAAA.", "AAA AAAAAAA AAAAA AAAAAAAAA AAA AAAAAAAA AAAAAAAA AAAAAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id011
+    - '["submission_report.md contains a Mermaid architecture diagram.", "The diagram
+      shows detective and judicial parallel branches."]'
+    downstream_consumers: []
+  scores__Architectural Diagram Analysis__notes:
+    type: string
+    required: true
+    description: 'scores -> Architectural Diagram Analysis -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Scored from Mermaid
+      diagram presence and expl....'
+    metrics: &id012
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAA AAAA AAAAAAA AAAAAAA AAAAAAAA AAA AAAAAAAA
+        AAAAAAAA-AAAAAA AAAAAA AA AAA AAAAAA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id013
+    - Scored from Mermaid diagram presence and explicit parallel-branch labels in
+      the report.
+    downstream_consumers: []
+  scores__Architectural Diagram Analysis__score:
+    type: integer
+    required: true
+    description: 'scores -> Architectural Diagram Analysis -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: &id014
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__Chief Justice Synthesis Engine__evidence:
+    type: string
+    required: true
+    description: 'scores -> Chief Justice Synthesis Engine -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Chief Justice
+      computes a deterministic scor....'
+    metrics: &id015
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAA AAAAAAA AAAAAAAA A AAAAAAAAAAAAA AAAAA
+        AA AAAAAA.", "AAAAA AAAAAAA AAAAAAAA A AAAAAAAA AAAA AAAA AAA AAAAAAAAA AAAAA.",
+        "AAAAA AAAAAAA AAAAA AAAAAAAAAA AAAAAAAAA AAAAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id016
+    - '["Chief Justice computes a deterministic score in Python.", "Chief Justice
+      includes a fallback path when LLM synthesis fails.", "Chief Justice emits structured
+      criterion results."]'
+    downstream_consumers: []
+  scores__Chief Justice Synthesis Engine__notes:
+    type: string
+    required: true
+    description: 'scores -> Chief Justice Synthesis Engine -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Scored from deterministic
+      synthesis and struc....'
+    metrics: &id017
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAA AAAA AAAAAAAAAAAAA AAAAAAAAA AAA AAAAAAAAAA
+        AAAAAA AAAAAAAA AA AAA/AAAAA/AAAAAAA.AA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id018
+    - Scored from deterministic synthesis and structured result handling in src/nodes/justice.py.
+    downstream_consumers: []
+  scores__Chief Justice Synthesis Engine__score:
+    type: integer
+    required: true
+    description: 'scores -> Chief Justice Synthesis Engine -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: &id019
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__Git Forensic Analysis__evidence:
+    type: string
+    required: true
+    description: 'scores -> Git Forensic Analysis -> evidence represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: [".git metadata is present
+      in the repo snapsh....'
+    metrics: &id020
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '[".AAA AAAAAAAA AA AAAAAAA AA AAA AAAA AAAAAAAA.",
+        "AAAAAA.AAAA AAAAAAAAAA AAAAAAA AAAAAAAAA AAA-AAAAAAA AAAAAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id021
+    - '[".git metadata is present in the repo snapshot.", "rubric.json explicitly
+      expects iterative git-history analysis."]'
+    downstream_consumers: []
+  scores__Git Forensic Analysis__notes:
+    type: string
+    required: true
+    description: 'scores -> Git Forensic Analysis -> notes represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: Scored from repository
+      snapshot availability ....'
+    metrics: &id022
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAA AAAA AAAAAAAAAA AAAAAAAA AAAAAAAAAAAA AAAAAA
+        AAAA A AAAA AAAAAA AAAAAAA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id023
+    - Scored from repository snapshot availability rather than a live cloned history.
+    downstream_consumers: []
+  scores__Git Forensic Analysis__score:
+    type: integer
+    required: true
+    description: 'scores -> Git Forensic Analysis -> score represented as integer.
+      Null fraction 0.000; distinct values 1. Sample values: 4. Observed range 4.0
+      to 4.0; mean 4.0; p25 4.0; p50 4.0; p75 4.0; std 0.0; p95 4.0; p99 4.0.'
+    metrics: &id024
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 4.0
+      max: 4.0
+      mean: 4.0
+      p25: 4.0
+      p50: 4.0
+      p75: 4.0
+      std: 0.0
+      p95: 4.0
+      p99: 4.0
+    minimum: 4.0
+    maximum: 4.0
+    downstream_consumers: []
+  scores__Graph Orchestration Architecture__evidence:
+    type: string
+    required: true
+    description: 'scores -> Graph Orchestration Architecture -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["StateGraph
+      builder exists in src/graph.py."....'
+    metrics: &id025
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAAAAAA AAAAAAA AAAAAA AA AAA/AAAAA.AA.",
+        "AAAAAAAAAAA AAAAAAA AA AAAAAAAAAAA AA AAA/AAAAA.AA.", "AAAAAAAAA AAA-AAA
+        AAAAA AAA AAAAAAAA.", "AAAAA AAAAAAA AAA-AA AAAA AA AAAAAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id026
+    - '["StateGraph builder exists in src/graph.py.", "Conditional routing is implemented
+      in src/graph.py.", "Detective fan-out nodes are declared.", "Chief Justice fan-in
+      node is declared."]'
+    downstream_consumers: []
+  scores__Graph Orchestration Architecture__notes:
+    type: string
+    required: true
+    description: 'scores -> Graph Orchestration Architecture -> notes represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: Computed from
+      StateGraph construction, fan-ou....'
+    metrics: &id027
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAAA AAAA AAAAAAAAAA AAAAAAAAAAAA, AAA-AAA/AAA-AA
+        AAAAA, AAA AAAAAAAAAAA AAAAA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id028
+    - Computed from StateGraph construction, fan-out/fan-in nodes, and conditional
+      edges.
+    downstream_consumers: []
+  scores__Graph Orchestration Architecture__score:
+    type: integer
+    required: true
+    description: 'scores -> Graph Orchestration Architecture -> score represented
+      as integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: &id029
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__Judicial Nuance and Dialectics__evidence:
+    type: string
+    required: true
+    description: 'scores -> Judicial Nuance and Dialectics -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Prosecutor
+      persona prompt is distinct and a....'
+    metrics: &id030
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAAAAAA AAAAAAA AAAAAA AA AAAAAAAA AAA AAAAAAAAAAA.",
+        "AAAAAAA AAAAAAA AAAAAA AA AAAAAAAA AAA AAAAAAAAAA-AAAAAAAA.", "AAAA AAAA
+        AAAAAAA AAAAAA AA AAAAAAAA AAA AAAAAAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id031
+    - '["Prosecutor persona prompt is distinct and adversarial.", "Defense persona
+      prompt is distinct and mitigation-oriented.", "Tech Lead persona prompt is distinct
+      and pragmatic."]'
+    downstream_consumers: []
+  scores__Judicial Nuance and Dialectics__notes:
+    type: string
+    required: true
+    description: 'scores -> Judicial Nuance and Dialectics -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Derived from
+      the presence of separate judge p....'
+    metrics: &id032
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAA AAAA AAA AAAAAAAA AA AAAAAAAA AAAAA AAAAAAA
+        AAA AAAAA AA AAA/AAAAA/AAAAAA.AA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id033
+    - Derived from the presence of separate judge prompts and roles in src/nodes/judges.py.
+    downstream_consumers: []
+  scores__Judicial Nuance and Dialectics__score:
+    type: integer
+    required: true
+    description: 'scores -> Judicial Nuance and Dialectics -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: &id034
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__Report Accuracy (Cross-Reference)__evidence:
+    type: string
+    required: true
+    description: 'scores -> Report Accuracy (Cross-Reference) -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Report discussion
+      aligns with src/graph.py.....'
+    metrics: &id035
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAA AAAAAAAAAA AAAAAA AAAA AAA/AAAAA.AA.",
+        "AAAAAA AAAAAAAAAA AAAAAA AAAA AAA/AAAAA/AAAAAA.AA.", "AAAAAA AAAAAAAAAA AAAAAA
+        AAAA AAA/AAAAA/AAAAAAA.AA.", "AAAAAA AAAAAAAAAA AAAAAA AAAA AAA/AAAAA.AA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id036
+    - '["Report discussion aligns with src/graph.py.", "Report discussion aligns with
+      src/nodes/judges.py.", "Report discussion aligns with src/nodes/justice.py.",
+      "Report discussion aligns with src/state.py."]'
+    downstream_consumers: []
+  scores__Report Accuracy (Cross-Reference)__notes:
+    type: string
+    required: true
+    description: 'scores -> Report Accuracy (Cross-Reference) -> notes represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: Cross-reference
+      is approximated from report c....'
+    metrics: &id037
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAA-AAAAAAAAA AA AAAAAAAAAAAA AAAA AAAAAA AAAAAA
+        AAA AAAAAAAA AAAAAA-AAAA AAAAAAAA AA AAA AAAAAAAAAA AAAAAAAA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id038
+    - Cross-reference is approximated from report claims and matching source-file
+      presence in the repository snapshot.
+    downstream_consumers: []
+  scores__Report Accuracy (Cross-Reference)__score:
+    type: integer
+    required: true
+    description: 'scores -> Report Accuracy (Cross-Reference) -> score represented
+      as integer. Null fraction 0.000; distinct values 1. Sample values: 4. Observed
+      range 4.0 to 4.0; mean 4.0; p25 4.0; p50 4.0; p75 4.0; std 0.0; p95 4.0; p99
+      4.0.'
+    metrics: &id039
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 4.0
+      max: 4.0
+      mean: 4.0
+      p25: 4.0
+      p50: 4.0
+      p75: 4.0
+      std: 0.0
+      p95: 4.0
+      p99: 4.0
+    minimum: 4.0
+    maximum: 4.0
+    downstream_consumers: []
+  scores__Safe Tool Engineering__evidence:
+    type: string
+    required: true
+    description: 'scores -> Safe Tool Engineering -> evidence represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: ["Repository cloning
+      is sandboxed with tempfi....'
+    metrics: &id040
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAAAAAA AAAAAAA AA AAAAAAAAA AAAA AAAAAAAA.AAAAAAAAAAAAAAAAAA().",
+        "AAA AAAAAAAA AAA AAAAAAAAAA.AAA AAAA AAAAAAAA AAAAAA.", "AAA AAAAAAAA AAAAAAAAAA
+        AAAAA AAA AAAAAA AA.AAAAAA AAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id041
+    - '["Repository cloning is sandboxed with tempfile.TemporaryDirectory().", "Git
+      commands use subprocess.run with captured output.", "AST analysis explicitly
+      scans for unsafe os.system usage."]'
+    downstream_consumers: []
+  scores__Safe Tool Engineering__notes:
+    type: string
+    required: true
+    description: 'scores -> Safe Tool Engineering -> notes represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: Based on clone sandboxing,
+      subprocess usage, ....'
+    metrics: &id042
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAA AA AAAAA AAAAAAAAAA, AAAAAAAAAA AAAAA, AAA
+        AAAAAAAA AAAAAAAA AAAAAA AA AAAAAAAAA AAAAAAAA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id043
+    - Based on clone sandboxing, subprocess usage, and explicit security checks in
+      detective analysis.
+    downstream_consumers: []
+  scores__Safe Tool Engineering__score:
+    type: integer
+    required: true
+    description: 'scores -> Safe Tool Engineering -> score represented as integer.
+      Null fraction 0.000; distinct values 1. Sample values: 5. Observed range 5.0
+      to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99 5.0.'
+    metrics: &id044
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__State Management Rigor__evidence:
+    type: string
+    required: true
+    description: 'scores -> State Management Rigor -> evidence represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: ["AgentState uses TypedDict
+      in src/state.py."....'
+    metrics: &id045
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAAAAAA AAAA AAAAAAAAA AA AAA/AAAAA.AA.",
+        "AAAAAAAA, AAAAAAAAAAAAAAA, AAAAAAAAAAAAAAA, AAA AAAAAAAAAAA AAAAAAA AAAA
+        AAAAAAAAA.", "AAAAAAAAAA AAAA AAAAAAAA.AAA AAAAAAA AAA AAAAAAAA AAAAAAA.",
+        "AAAAAAAAAA AAAA AAAAAAAA.AAA AAAAAAA AAA AAAAAAAA AAAAAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id046
+    - '["AgentState uses TypedDict in src/state.py.", "Evidence, JudicialOpinion,
+      CriterionResult, and AuditReport inherit from BaseModel.", "AgentState uses
+      operator.ior reducer for evidence merging.", "AgentState uses operator.add reducer
+      for judicial opinions."]'
+    downstream_consumers: []
+  scores__State Management Rigor__notes:
+    type: string
+    required: true
+    description: 'scores -> State Management Rigor -> notes represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: Derived directly from
+      typed state and reducer....'
+    metrics: &id047
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAA AAAAAAAA AAAA AAAAA AAAAA AAA AAAAAAA AAAAAAAAAAA
+        AA AAA/AAAAA.AA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id048
+    - Derived directly from typed state and reducer definitions in src/state.py.
+    downstream_consumers: []
+  scores__State Management Rigor__score:
+    type: integer
+    required: true
+    description: 'scores -> State Management Rigor -> score represented as integer.
+      Null fraction 0.000; distinct values 1. Sample values: 5. Observed range 5.0
+      to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99 5.0.'
+    metrics: &id049
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__Structured Output Enforcement__evidence:
+    type: string
+    required: true
+    description: 'scores -> Structured Output Enforcement -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Judge nodes
+      use with_structured_output(Judi....'
+    metrics: &id050
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAA AAAAA AAA AAAA_AAAAAAAAAA_AAAAAA(AAAAAAAAAAAAAAA).",
+        "AAAAA AAAAA AAAAA AAAAA AAAAAAAAA AAAAAAAAAA AAAAAA.", "AAAAAAAAAA AAAAAA
+        AA AAAAAAAAA AAAAAAA AAA AAAAAAAAAAAAAAA AAAAA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id051
+    - '["Judge nodes use with_structured_output(JudicialOpinion).", "Judge nodes retry
+      after malformed structured output.", "Structured output is validated against
+      the JudicialOpinion model."]'
+    downstream_consumers: []
+  scores__Structured Output Enforcement__notes:
+    type: string
+    required: true
+    description: 'scores -> Structured Output Enforcement -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Scored from structured-output
+      binding and ret....'
+    metrics: &id052
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAA AAAA AAAAAAAAAA-AAAAAA AAAAAAA AAA AAAAA
+        AAAAA AA AAAAA AAAAA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id053
+    - Scored from structured-output binding and retry logic in judge nodes.
+    downstream_consumers: []
+  scores__Structured Output Enforcement__score:
+    type: integer
+    required: true
+    description: 'scores -> Structured Output Enforcement -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: &id054
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  scores__Theoretical Depth (Documentation)__evidence:
+    type: string
+    required: true
+    description: 'scores -> Theoretical Depth (Documentation) -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["submission_report.md
+      explains Dialectical S....'
+    metrics: &id055
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: '["AAAAAAAAAA_AAAAAA.AA AAAAAAAA AAAAAAAAAAA AAAAAAAAA.",
+        "AAAAAAAAAA_AAAAAA.AA AAAAAAAA AAAAAAAAAAAAA.", "AAAAAAAAAA_AAAAAA.AA AAAAAAAA
+        AAA-AAA.", "AAAAAAAAAA_AAAAAA.AA AAAAAAAA AAA-AA."]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id056
+    - '["submission_report.md explains Dialectical Synthesis.", "submission_report.md
+      explains Metacognition.", "submission_report.md explains Fan-Out.", "submission_report.md
+      explains Fan-In."]'
+    downstream_consumers: []
+  scores__Theoretical Depth (Documentation)__notes:
+    type: string
+    required: true
+    description: 'scores -> Theoretical Depth (Documentation) -> notes represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: Computed from
+      substantive terminology present....'
+    metrics: &id057
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAAA AAAA AAAAAAAAAAA AAAAAAAAAAA AAAAAAA AA
+        AAAAAAAAAA_AAAAAA.AA.
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id058
+    - Computed from substantive terminology present in submission_report.md.
+    downstream_consumers: []
+  scores__Theoretical Depth (Documentation)__score:
+    type: integer
+    required: true
+    description: 'scores -> Theoretical Depth (Documentation) -> score represented
+      as integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: &id059
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 5.0
+      max: 5.0
+      mean: 5.0
+      p25: 5.0
+      p50: 5.0
+      p75: 5.0
+      std: 0.0
+      p95: 5.0
+      p99: 5.0
+    minimum: 5.0
+    maximum: 5.0
+    downstream_consumers: []
+  target_ref:
+    type: string
+    required: true
+    description: 'target_ref represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: submission_report.md.'
+    metrics: &id060
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAAAAA_AAAAAA.AA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id061
+    - submission_report.md
+    downstream_consumers:
+    - week7-ai-contract-extension
+  verdict_id:
+    type: string
+    required: true
+    description: 'verdict_id represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: e74eb79b-567b-4171-9083-72d61bd37bac.'
+    metrics: &id062
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: A99AA99A-999A-9999-9999-99A99AA99AAA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id063
+    - e74eb79b-567b-4171-9083-72d61bd37bac
+    format: uuid
+    downstream_consumers: []
+    unique: true
+quality:
+  type: SodaChecks
+  specification:
+    checks for verdicts:
+    - '- row_count >= 1'
+    - '- missing_count(confidence) = 0'
+    - '- min(confidence) >= 0.0'
+    - '- max(confidence) <= 1.0'
+    - '- avg(confidence) >= 0.0'
+    - '- avg(confidence) <= 1.0'
+    - '- missing_count(evaluated_at) = 0'
+    - '- missing_count(overall_score) = 0'
+    - '- min(overall_score) >= 4.8'
+    - '- max(overall_score) <= 4.8'
+    - '- missing_count(overall_verdict) = 0'
+    - '- missing_count(rubric_id) = 0'
+    - '- missing_count(rubric_version) = 0'
+    - '- missing_count(scores__Architectural Diagram Analysis__evidence) = 0'
+    - '- missing_count(scores__Architectural Diagram Analysis__notes) = 0'
+    - '- missing_count(scores__Architectural Diagram Analysis__score) = 0'
+    - '- min(scores__Architectural Diagram Analysis__score) >= 5.0'
+    - '- max(scores__Architectural Diagram Analysis__score) <= 5.0'
+    - '- missing_count(scores__Chief Justice Synthesis Engine__evidence) = 0'
+    - '- missing_count(scores__Chief Justice Synthesis Engine__notes) = 0'
+    - '- missing_count(scores__Chief Justice Synthesis Engine__score) = 0'
+    - '- min(scores__Chief Justice Synthesis Engine__score) >= 5.0'
+    - '- max(scores__Chief Justice Synthesis Engine__score) <= 5.0'
+    - '- missing_count(scores__Git Forensic Analysis__evidence) = 0'
+    - '- missing_count(scores__Git Forensic Analysis__notes) = 0'
+    - '- missing_count(scores__Git Forensic Analysis__score) = 0'
+    - '- min(scores__Git Forensic Analysis__score) >= 4.0'
+    - '- max(scores__Git Forensic Analysis__score) <= 4.0'
+    - '- missing_count(scores__Graph Orchestration Architecture__evidence) = 0'
+    - '- missing_count(scores__Graph Orchestration Architecture__notes) = 0'
+    - '- missing_count(scores__Graph Orchestration Architecture__score) = 0'
+    - '- min(scores__Graph Orchestration Architecture__score) >= 5.0'
+    - '- max(scores__Graph Orchestration Architecture__score) <= 5.0'
+    - '- missing_count(scores__Judicial Nuance and Dialectics__evidence) = 0'
+    - '- missing_count(scores__Judicial Nuance and Dialectics__notes) = 0'
+    - '- missing_count(scores__Judicial Nuance and Dialectics__score) = 0'
+    - '- min(scores__Judicial Nuance and Dialectics__score) >= 5.0'
+    - '- max(scores__Judicial Nuance and Dialectics__score) <= 5.0'
+    - '- missing_count(scores__Report Accuracy (Cross-Reference)__evidence) = 0'
+    - '- missing_count(scores__Report Accuracy (Cross-Reference)__notes) = 0'
+    - '- missing_count(scores__Report Accuracy (Cross-Reference)__score) = 0'
+    - '- min(scores__Report Accuracy (Cross-Reference)__score) >= 4.0'
+    - '- max(scores__Report Accuracy (Cross-Reference)__score) <= 4.0'
+    - '- missing_count(scores__Safe Tool Engineering__evidence) = 0'
+    - '- missing_count(scores__Safe Tool Engineering__notes) = 0'
+    - '- missing_count(scores__Safe Tool Engineering__score) = 0'
+    - '- min(scores__Safe Tool Engineering__score) >= 5.0'
+    - '- max(scores__Safe Tool Engineering__score) <= 5.0'
+    - '- missing_count(scores__State Management Rigor__evidence) = 0'
+    - '- missing_count(scores__State Management Rigor__notes) = 0'
+    - '- missing_count(scores__State Management Rigor__score) = 0'
+    - '- min(scores__State Management Rigor__score) >= 5.0'
+    - '- max(scores__State Management Rigor__score) <= 5.0'
+    - '- missing_count(scores__Structured Output Enforcement__evidence) = 0'
+    - '- missing_count(scores__Structured Output Enforcement__notes) = 0'
+    - '- missing_count(scores__Structured Output Enforcement__score) = 0'
+    - '- min(scores__Structured Output Enforcement__score) >= 5.0'
+    - '- max(scores__Structured Output Enforcement__score) <= 5.0'
+    - '- missing_count(scores__Theoretical Depth (Documentation)__evidence) = 0'
+    - '- missing_count(scores__Theoretical Depth (Documentation)__notes) = 0'
+    - '- missing_count(scores__Theoretical Depth (Documentation)__score) = 0'
+    - '- min(scores__Theoretical Depth (Documentation)__score) >= 5.0'
+    - '- max(scores__Theoretical Depth (Documentation)__score) <= 5.0'
+    - '- missing_count(target_ref) = 0'
+    - '- missing_count(verdict_id) = 0'
+    - '- duplicate_count(verdict_id) = 0'
+lineage:
+  source: outputs/week2/verdicts.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  upstream: []
+  downstream:
+  - id: week7-ai-contract-extension
+    description: LLM output schema validation relies on a stable verdict taxonomy.;
+      Output-schema validation checks the linkage back to upstream code references.;
+      Downstream AI risk monitoring depends on stable numeric confidence baselines.
+    fields_consumed:
+    - overall_verdict
+    - target_ref
+    - confidence
+    - overall_score
+    breaking_if_changed:
+    - overall_verdict
+    - target_ref
+    - confidence
+    validation_mode: ENFORCE
+  downstream_consumers_from_graph: []
+profiling:
+  engine: ydata-profiling
+  columns_profiled: 38
+  rows_profiled: 1
+  generated: true
+  numeric_baseline_file: schema_snapshots/numeric_column_baselines.json
+llm_annotations: []
+models:
+- name: verdicts
+  type: table
+  fields:
+  - name: confidence
+    type: number
+    required: true
+    description: Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking
+      change.
+    metrics: *id001
+    minimum: 0.0
+    maximum: 1.0
+  - name: evaluated_at
+    type: string
+    required: true
+    description: 'evaluated_at represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: 2026-03-01T00:19:19.906242Z.'
+    metrics: *id002
+    format: date-time
+  - name: overall_score
+    type: number
+    required: true
+    description: 'overall_score represented as number. Null fraction 0.000; distinct
+      values 1. Sample values: 4.8. Observed range 4.8 to 4.8; mean 4.8; p25 4.8;
+      p50 4.8; p75 4.8; std 0.0; p95 4.8; p99 4.8.'
+    metrics: *id003
+    minimum: 4.8
+    maximum: 4.8
+  - name: overall_verdict
+    type: string
+    required: true
+    description: 'overall_verdict represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: PASS.'
+    metrics: *id004
+    enum: *id005
+  - name: rubric_id
+    type: string
+    required: true
+    description: 'rubric_id represented as string. Null fraction 0.000; distinct values
+      1. Sample values: 63a61ad87a88cd0f38e79b8b0152edd717600073101e3....'
+    metrics: *id006
+    enum: *id007
+  - name: rubric_version
+    type: string
+    required: true
+    description: 'rubric_version represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: 3.0.0.'
+    metrics: *id008
+    enum: *id009
+  - name: scores__Architectural Diagram Analysis__evidence
+    type: string
+    required: true
+    description: 'scores -> Architectural Diagram Analysis -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["submission_report.md
+      contains a Mermaid arc....'
+    metrics: *id010
+    enum: *id011
+  - name: scores__Architectural Diagram Analysis__notes
+    type: string
+    required: true
+    description: 'scores -> Architectural Diagram Analysis -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Scored from Mermaid
+      diagram presence and expl....'
+    metrics: *id012
+    enum: *id013
+  - name: scores__Architectural Diagram Analysis__score
+    type: integer
+    required: true
+    description: 'scores -> Architectural Diagram Analysis -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: *id014
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__Chief Justice Synthesis Engine__evidence
+    type: string
+    required: true
+    description: 'scores -> Chief Justice Synthesis Engine -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Chief Justice
+      computes a deterministic scor....'
+    metrics: *id015
+    enum: *id016
+  - name: scores__Chief Justice Synthesis Engine__notes
+    type: string
+    required: true
+    description: 'scores -> Chief Justice Synthesis Engine -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Scored from deterministic
+      synthesis and struc....'
+    metrics: *id017
+    enum: *id018
+  - name: scores__Chief Justice Synthesis Engine__score
+    type: integer
+    required: true
+    description: 'scores -> Chief Justice Synthesis Engine -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: *id019
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__Git Forensic Analysis__evidence
+    type: string
+    required: true
+    description: 'scores -> Git Forensic Analysis -> evidence represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: [".git metadata is present
+      in the repo snapsh....'
+    metrics: *id020
+    enum: *id021
+  - name: scores__Git Forensic Analysis__notes
+    type: string
+    required: true
+    description: 'scores -> Git Forensic Analysis -> notes represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: Scored from repository
+      snapshot availability ....'
+    metrics: *id022
+    enum: *id023
+  - name: scores__Git Forensic Analysis__score
+    type: integer
+    required: true
+    description: 'scores -> Git Forensic Analysis -> score represented as integer.
+      Null fraction 0.000; distinct values 1. Sample values: 4. Observed range 4.0
+      to 4.0; mean 4.0; p25 4.0; p50 4.0; p75 4.0; std 0.0; p95 4.0; p99 4.0.'
+    metrics: *id024
+    minimum: 4.0
+    maximum: 4.0
+  - name: scores__Graph Orchestration Architecture__evidence
+    type: string
+    required: true
+    description: 'scores -> Graph Orchestration Architecture -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["StateGraph
+      builder exists in src/graph.py."....'
+    metrics: *id025
+    enum: *id026
+  - name: scores__Graph Orchestration Architecture__notes
+    type: string
+    required: true
+    description: 'scores -> Graph Orchestration Architecture -> notes represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: Computed from
+      StateGraph construction, fan-ou....'
+    metrics: *id027
+    enum: *id028
+  - name: scores__Graph Orchestration Architecture__score
+    type: integer
+    required: true
+    description: 'scores -> Graph Orchestration Architecture -> score represented
+      as integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: *id029
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__Judicial Nuance and Dialectics__evidence
+    type: string
+    required: true
+    description: 'scores -> Judicial Nuance and Dialectics -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Prosecutor
+      persona prompt is distinct and a....'
+    metrics: *id030
+    enum: *id031
+  - name: scores__Judicial Nuance and Dialectics__notes
+    type: string
+    required: true
+    description: 'scores -> Judicial Nuance and Dialectics -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Derived from
+      the presence of separate judge p....'
+    metrics: *id032
+    enum: *id033
+  - name: scores__Judicial Nuance and Dialectics__score
+    type: integer
+    required: true
+    description: 'scores -> Judicial Nuance and Dialectics -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: *id034
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__Report Accuracy (Cross-Reference)__evidence
+    type: string
+    required: true
+    description: 'scores -> Report Accuracy (Cross-Reference) -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Report discussion
+      aligns with src/graph.py.....'
+    metrics: *id035
+    enum: *id036
+  - name: scores__Report Accuracy (Cross-Reference)__notes
+    type: string
+    required: true
+    description: 'scores -> Report Accuracy (Cross-Reference) -> notes represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: Cross-reference
+      is approximated from report c....'
+    metrics: *id037
+    enum: *id038
+  - name: scores__Report Accuracy (Cross-Reference)__score
+    type: integer
+    required: true
+    description: 'scores -> Report Accuracy (Cross-Reference) -> score represented
+      as integer. Null fraction 0.000; distinct values 1. Sample values: 4. Observed
+      range 4.0 to 4.0; mean 4.0; p25 4.0; p50 4.0; p75 4.0; std 0.0; p95 4.0; p99
+      4.0.'
+    metrics: *id039
+    minimum: 4.0
+    maximum: 4.0
+  - name: scores__Safe Tool Engineering__evidence
+    type: string
+    required: true
+    description: 'scores -> Safe Tool Engineering -> evidence represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: ["Repository cloning
+      is sandboxed with tempfi....'
+    metrics: *id040
+    enum: *id041
+  - name: scores__Safe Tool Engineering__notes
+    type: string
+    required: true
+    description: 'scores -> Safe Tool Engineering -> notes represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: Based on clone sandboxing,
+      subprocess usage, ....'
+    metrics: *id042
+    enum: *id043
+  - name: scores__Safe Tool Engineering__score
+    type: integer
+    required: true
+    description: 'scores -> Safe Tool Engineering -> score represented as integer.
+      Null fraction 0.000; distinct values 1. Sample values: 5. Observed range 5.0
+      to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99 5.0.'
+    metrics: *id044
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__State Management Rigor__evidence
+    type: string
+    required: true
+    description: 'scores -> State Management Rigor -> evidence represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: ["AgentState uses TypedDict
+      in src/state.py."....'
+    metrics: *id045
+    enum: *id046
+  - name: scores__State Management Rigor__notes
+    type: string
+    required: true
+    description: 'scores -> State Management Rigor -> notes represented as string.
+      Null fraction 0.000; distinct values 1. Sample values: Derived directly from
+      typed state and reducer....'
+    metrics: *id047
+    enum: *id048
+  - name: scores__State Management Rigor__score
+    type: integer
+    required: true
+    description: 'scores -> State Management Rigor -> score represented as integer.
+      Null fraction 0.000; distinct values 1. Sample values: 5. Observed range 5.0
+      to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99 5.0.'
+    metrics: *id049
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__Structured Output Enforcement__evidence
+    type: string
+    required: true
+    description: 'scores -> Structured Output Enforcement -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["Judge nodes
+      use with_structured_output(Judi....'
+    metrics: *id050
+    enum: *id051
+  - name: scores__Structured Output Enforcement__notes
+    type: string
+    required: true
+    description: 'scores -> Structured Output Enforcement -> notes represented as
+      string. Null fraction 0.000; distinct values 1. Sample values: Scored from structured-output
+      binding and ret....'
+    metrics: *id052
+    enum: *id053
+  - name: scores__Structured Output Enforcement__score
+    type: integer
+    required: true
+    description: 'scores -> Structured Output Enforcement -> score represented as
+      integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: *id054
+    minimum: 5.0
+    maximum: 5.0
+  - name: scores__Theoretical Depth (Documentation)__evidence
+    type: string
+    required: true
+    description: 'scores -> Theoretical Depth (Documentation) -> evidence represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: ["submission_report.md
+      explains Dialectical S....'
+    metrics: *id055
+    enum: *id056
+  - name: scores__Theoretical Depth (Documentation)__notes
+    type: string
+    required: true
+    description: 'scores -> Theoretical Depth (Documentation) -> notes represented
+      as string. Null fraction 0.000; distinct values 1. Sample values: Computed from
+      substantive terminology present....'
+    metrics: *id057
+    enum: *id058
+  - name: scores__Theoretical Depth (Documentation)__score
+    type: integer
+    required: true
+    description: 'scores -> Theoretical Depth (Documentation) -> score represented
+      as integer. Null fraction 0.000; distinct values 1. Sample values: 5. Observed
+      range 5.0 to 5.0; mean 5.0; p25 5.0; p50 5.0; p75 5.0; std 0.0; p95 5.0; p99
+      5.0.'
+    metrics: *id059
+    minimum: 5.0
+    maximum: 5.0
+  - name: target_ref
+    type: string
+    required: true
+    description: 'target_ref represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: submission_report.md.'
+    metrics: *id060
+    enum: *id061
+  - name: verdict_id
+    type: string
+    required: true
+    description: 'verdict_id represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: e74eb79b-567b-4171-9083-72d61bd37bac.'
+    metrics: *id062
+    enum: *id063
+    format: uuid

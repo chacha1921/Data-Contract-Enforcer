@@ -14,6 +14,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 VALIDATION_REPORTS_DIR = PROJECT_ROOT / "validation_reports"
 VIOLATION_LOG_PATH = PROJECT_ROOT / "violation_log" / "violations.jsonl"
+AI_WARNING_LOG_PATH = PROJECT_ROOT / "violation_log" / "ai_warnings.jsonl"
 REGISTRY_PATH = PROJECT_ROOT / "contract_registry" / "subscriptions.yaml"
 ENFORCER_REPORT_DIR = PROJECT_ROOT / "enforcer_report"
 SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "WARNING": 2, "LOW": 3, "INFO": 4}
@@ -69,6 +70,24 @@ def load_json(path: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
+def load_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    records: list[dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            raw = line.strip()
+            if not raw or raw.startswith("#"):
+                continue
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(payload, dict):
+                records.append(payload)
+    return records
+
+
 def load_registry(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
@@ -108,6 +127,19 @@ def producer_path_for_contract(contract_id: str) -> str:
         "week4-cartographer-lineage": "outputs/week4/lineage_snapshots.jsonl",
     }
     return mapping.get(contract_id, "outputs")
+
+
+def contract_file_for_contract(contract_id: str) -> str:
+    mapping = {
+        "week1-intent-records": "generated_contracts/week1_intent_records.yaml",
+        "week2-verdict-records": "generated_contracts/week2_verdicts.yaml",
+        "week3-document-refinery-extractions": "generated_contracts/week3_extractions.yaml",
+        "week4-cartographer-lineage": "generated_contracts/week4_lineage.yaml",
+        "week5-ledger-events": "generated_contracts/week5_events.yaml",
+        "langsmith-traces": "generated_contracts/langsmith_traces.yaml",
+        "week7-breaking-demo": "validation_reports/schema_evolution_week7_breaking_demo.json",
+    }
+    return mapping.get(contract_id, "generated_contracts")
 
 
 def registry_impacts(registry: list[dict[str, Any]], contract_id: str, field_name: str | None) -> list[dict[str, Any]]:
@@ -244,6 +276,29 @@ def collect_ai_violations(validation_dir: Path, registry: list[dict[str, Any]]) 
     return violations
 
 
+def collect_ai_logged_violations(registry: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    violations: list[dict[str, Any]] = []
+    for record in load_jsonl(AI_WARNING_LOG_PATH):
+        contract_id = str(record.get("contract_id", "week2-verdict-records"))
+        field_name = str(record.get("field", "overall_verdict"))
+        impacts = registry_impacts(registry, contract_id, field_name)
+        violations.append(
+            {
+                "source": "ai_warning_log",
+                "report_path": str(record.get("report_path") or relative_path(AI_WARNING_LOG_PATH)),
+                "system": contract_display_name(contract_id),
+                "contract_id": contract_id,
+                "field": field_name,
+                "severity": str(record.get("severity", "WARNING")).upper(),
+                "status": str(record.get("status", "WARN")).upper(),
+                "check_type": record.get("check_type") or "llm_output_schema_violation_rate",
+                "impacts": impacts,
+                "message": record.get("message"),
+            }
+        )
+    return violations
+
+
 def collect_schema_changes(validation_dir: Path) -> list[dict[str, Any]]:
     changes: list[dict[str, Any]] = []
     cutoff = seven_days_ago()
@@ -270,6 +325,7 @@ def collect_schema_changes(validation_dir: Path) -> list[dict[str, Any]]:
                 changes.append(
                     {
                         "contract_id": contract_id,
+                        "change_type": change.get("change_type"),
                         "summary": change.get("summary") or change.get("human_diff"),
                         "compatibility_verdict": comparison.get("compatibility_verdict"),
                         "required_action": change.get("required_action"),
@@ -298,6 +354,7 @@ def collect_schema_breaking_violations(validation_dir: Path, registry: list[dict
                 "severity": "HIGH",
                 "status": "BREAKING",
                 "check_type": "schema_change",
+                "change_type": change.get("change_type"),
                 "impacts": impacts,
                 "message": change.get("summary"),
             }
@@ -394,14 +451,36 @@ def build_ai_risk_assessment(validation_dir: Path) -> dict[str, Any]:
 def recommendation_from_violation(violation: dict[str, Any]) -> str:
     contract_id = str(violation.get("contract_id", "unknown_contract"))
     field_name = normalize_field_name(str(violation.get("field", "unknown_field")))
-    producer_path = producer_path_for_contract(contract_id)
-    if contract_id == "week3-document-refinery-extractions" and "confidence" in field_name:
-        return f"Update {producer_path} to output {field_name} as float 0.0–1.0 per contract {contract_id} clause {field_name}.range."
-    if contract_id == "week3-document-refinery-extractions" and "prompt" in field_name:
-        return f"Update {producer_path} to populate doc_id, source_path, and content_preview before Week 3 prompt records reach outputs/quarantine/ for contract {contract_id}."
-    if contract_id == "week2-verdict-records":
-        return f"Update {producer_path} to emit stable overall_verdict values in PASS/FAIL/WARN and add prompt_version for per-version monitoring in contract {contract_id}."
-    return f"Update {producer_path} to restore field {field_name} to the expected shape required by contract {contract_id}."
+    contract_file = contract_file_for_contract(contract_id)
+    check_type = str(violation.get("check_type", "type"))
+    clause = contract_clause_for_violation(contract_id, field_name, check_type, str(violation.get("change_type") or ""))
+    if contract_id == "week2-verdict-records" and check_type == "llm_output_schema_violation_rate":
+        return f"Update {contract_file} clause {clause} so overall_verdict stays within PASS/FAIL/WARN for the prompt versions called out in the AI warning log."
+    return f"Update {contract_file} clause {clause} so field {field_name} satisfies the failing contract check captured in the latest input logs."
+
+
+def contract_clause_for_violation(contract_id: str, field_name: str, check_type: str, change_type: str = "") -> str:
+    dotted_field = normalize_field_name(field_name)
+    normalized_check = check_type.lower()
+    if normalized_check in {"required", "type", "format", "range"}:
+        return f"schema.{dotted_field}.{normalized_check}"
+    if normalized_check == "statistical_drift":
+        return f"schema.{dotted_field}.statistical_drift"
+    if normalized_check == "schema_change":
+        if change_type == "add_required_field":
+            return f"schema.{dotted_field}.required"
+        if change_type in {"narrow_constraints", "confidence_scale_change"}:
+            return f"schema.{dotted_field}.range"
+        if change_type in {"narrow_type", "change_type"}:
+            return f"schema.{dotted_field}.type"
+        return f"schema.{dotted_field}.compatibility"
+    if normalized_check == "llm_output_schema_violation_rate":
+        return "schema.overall_verdict.enum"
+    if normalized_check == "prompt_input_validation":
+        return "quality.ai.prompt_input_schema.required_fields"
+    if normalized_check == "embedding_drift":
+        return "quality.ai.embedding_drift.threshold"
+    return f"schema.{dotted_field}.type"
 
 
 def build_recommendations(violations: list[dict[str, Any]], ai_risk: dict[str, Any]) -> list[str]:
@@ -417,9 +496,9 @@ def build_recommendations(violations: list[dict[str, Any]], ai_risk: dict[str, A
             return recommendations
 
     fallback_actions = [
-        "Update repos/week2/src or the Week 2 verdict producer to emit prompt_version so output schema violation rate can be tracked per prompt version instead of falling back to rubric_version.",
-        "Update repos/week3/src to persist a canonical source_path alongside Week 3 extraction outputs so prompt input validation no longer relies on derived fallback metadata.",
-        "Run contracts/schema_analyzer.py for every contract snapshot directory on a scheduled cadence and feed the resulting schema_evolution_*.json outputs into contracts/report_generator.py before each release handoff.",
+        "Update generated_contracts/week2_verdicts.yaml clause schema.prompt_version.required so AI risk tracking can key on prompt_version instead of falling back to rubric_version.",
+        "Update generated_contracts/week3_extractions.yaml clause schema.source_path.required so prompt input validation reads a canonical source path from the contract-governed payload.",
+        "Update generated_contracts/week3_extractions.yaml clause schema.extracted_facts.confidence.statistical_drift so live analyzer and runner outputs continue to drive the report narrative from contract evidence.",
     ]
     for action in fallback_actions:
         if action in seen:
@@ -433,8 +512,9 @@ def build_recommendations(violations: list[dict[str, Any]], ai_risk: dict[str, A
 def build_json_payload(validation_dir: Path, registry: list[dict[str, Any]]) -> dict[str, Any]:
     runner_violations = collect_runner_violations(validation_dir, registry)
     ai_violations = collect_ai_violations(validation_dir, registry)
+    ai_logged_violations = collect_ai_logged_violations(registry)
     schema_violations = collect_schema_breaking_violations(validation_dir, registry)
-    violations = sorted_violations(runner_violations + ai_violations + schema_violations)
+    violations = sorted_violations(runner_violations + ai_violations + ai_logged_violations + schema_violations)
     check_summary = build_check_summary(validation_dir)
     data_health = build_data_health(violations, check_summary)
     schema_changes = collect_schema_changes(validation_dir)
@@ -463,6 +543,7 @@ def build_json_payload(validation_dir: Path, registry: list[dict[str, Any]]) -> 
         "source_artifacts": {
             "validation_reports": relative_path(validation_dir),
             "violation_log": relative_path(VIOLATION_LOG_PATH),
+            "ai_warning_log": relative_path(AI_WARNING_LOG_PATH),
         },
     }
 

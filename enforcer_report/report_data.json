@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-04T22:42:46.703051+00:00",
+  "generated_at": "2026-04-04T23:00:45.120688+00:00",
   "report_date": "2026-04-05",
   "data_health_score": {
     "score": 100,
@@ -43,6 +43,7 @@
   "schema_changes_detected": [
     {
       "contract_id": "week7-breaking-demo",
+      "change_type": "add_required_field",
       "summary": "Field amount changed from nullable to required.",
       "compatibility_verdict": "BREAKING",
       "required_action": "Coordinate with all producers. Provide default or migration script. Block deploy until all producers updated.",
@@ -51,6 +52,7 @@
     },
     {
       "contract_id": "week7-breaking-demo",
+      "change_type": "narrow_constraints",
       "summary": "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
       "compatibility_verdict": "BREAKING",
       "required_action": "Coordinate a migration window and confirm all subscribers can tolerate the narrower value range before deployment.",
@@ -59,6 +61,7 @@
     },
     {
       "contract_id": "week7-breaking-demo",
+      "change_type": "narrow_type",
       "summary": "Change type for amount from number to integer.",
       "compatibility_verdict": "BREAKING",
       "required_action": "CRITICAL. Requires migration plan with rollback. Registry blast radius report mandatory. Statistical baseline must be re-established after migration.",
@@ -90,12 +93,13 @@
     ]
   },
   "recommended_actions": [
-    "Update outputs to restore field amount to the expected shape required by contract week7-breaking-demo.",
-    "Update repos/week2/src or the Week 2 verdict producer to emit prompt_version so output schema violation rate can be tracked per prompt version instead of falling back to rubric_version.",
-    "Update repos/week3/src to persist a canonical source_path alongside Week 3 extraction outputs so prompt input validation no longer relies on derived fallback metadata."
+    "Update validation_reports/schema_evolution_week7_breaking_demo.json clause schema.amount.required so field amount satisfies the failing contract check captured in the latest input logs.",
+    "Update validation_reports/schema_evolution_week7_breaking_demo.json clause schema.amount.range so field amount satisfies the failing contract check captured in the latest input logs.",
+    "Update validation_reports/schema_evolution_week7_breaking_demo.json clause schema.amount.type so field amount satisfies the failing contract check captured in the latest input logs."
   ],
   "source_artifacts": {
     "validation_reports": "validation_reports",
-    "violation_log": "violation_log/violations.jsonl"
+    "violation_log": "violation_log/violations.jsonl",
+    "ai_warning_log": "violation_log/ai_warnings.jsonl"
   }
 }

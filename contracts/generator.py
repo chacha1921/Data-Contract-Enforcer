@@ -30,8 +30,10 @@ except Exception:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_LINEAGE_PATH = PROJECT_ROOT / "outputs" / "week4" / "lineage_snapshots.jsonl"
 DEFAULT_REGISTRY_PATH = PROJECT_ROOT / "contract_registry" / "subscriptions.yaml"
+NUMERIC_BASELINE_PATH = PROJECT_ROOT / "schema_snapshots" / "numeric_column_baselines.json"
 DEFAULT_EXPLODE_FIELDS = {"code_refs", "extracted_facts", "nodes", "edges"}
 UUID_PATTERN = re.compile(r"^[0-9a-f-]{36}$")
+BOUNDARY_WARNING_FIELDS = {"confidence", "score", "rate", "ratio", "fraction", "probability"}
 
 if load_dotenv is not None:
     load_dotenv(PROJECT_ROOT / ".env")
@@ -45,6 +47,16 @@ SOURCE_PRESETS = {
         "description": "Intent classification records emitted from the Week 1 orchestration output.",
         "usage": "Internal workflow orchestration data contract.",
         "limitations": "Intent labels and source references must remain stable for downstream workflow routing.",
+    },
+    "outputs/week2/verdicts.jsonl": {
+        "contract_id": "week2-verdict-records",
+        "output_name": "week2_verdicts",
+        "model_name": "verdicts",
+        "title": "Week 2 Digital Courtroom — Verdict Records",
+        "owner": "week2-team",
+        "description": "Structured verdict records emitted by the Week 2 courtroom evaluation pipeline.",
+        "usage": "Internal evaluation and AI quality monitoring contract.",
+        "limitations": "Verdict taxonomy, target references, and confidence scores must remain stable for downstream monitoring.",
     },
     "outputs/week3/extractions.jsonl": {
         "contract_id": "week3-document-refinery-extractions",
@@ -522,7 +534,128 @@ def column_to_clause(
         clause["minimum"] = 0.0
         clause["maximum"] = 1.0
 
+    warning_annotations = suspicious_distribution_annotations(profile, field_name, bitol_type)
+    if warning_annotations:
+        clause["warning_annotations"] = warning_annotations
+        clause["quality_flags"] = [item["code"] for item in warning_annotations]
+        warning_text = " ".join(item["message"] for item in warning_annotations)
+        clause["description"] = f"{clause['description']} Warning annotations: {warning_text}"
+
     return clause
+
+
+def is_boundary_sensitive_field(
+    field_name: str,
+    minimum: float | None,
+    maximum: float | None,
+    mean_value: float | None,
+) -> bool:
+    leaf_name = field_name.split("__")[-1].lower()
+    if minimum is not None and maximum is not None and minimum >= 0.0 and maximum <= 1.0:
+        return True
+    return bool(
+        any(token in leaf_name for token in BOUNDARY_WARNING_FIELDS)
+        and mean_value is not None
+        and 0.0 <= float(mean_value) <= 1.0
+    )
+
+
+def suspicious_distribution_annotations(
+    profile: dict[str, Any], field_name: str, bitol_type: str
+) -> list[dict[str, Any]]:
+    if bitol_type not in {"number", "integer"}:
+        return []
+
+    stats = profile.get("stats", {}) if isinstance(profile.get("stats"), dict) else {}
+    mean_value = stats.get("mean")
+    minimum = stats.get("min")
+    maximum = stats.get("max")
+    std_value = stats.get("std")
+    non_null_count = int(profile.get("non_null_count", 0) or 0)
+    if mean_value is None or not is_boundary_sensitive_field(field_name, minimum, maximum, mean_value):
+        return []
+
+    annotations: list[dict[str, Any]] = []
+    dotted_name = field_name.replace("__", ".")
+    if float(mean_value) >= 0.99:
+        annotations.append(
+            {
+                "severity": "WARNING",
+                "code": "mean_near_upper_bound",
+                "clause": f"schema.{dotted_name}.distribution_warning",
+                "message": f"Mean {round(float(mean_value), 6)} is near the upper bound and may indicate a clamped or saturated distribution.",
+            }
+        )
+    if float(mean_value) <= 0.01:
+        annotations.append(
+            {
+                "severity": "WARNING",
+                "code": "mean_near_lower_bound",
+                "clause": f"schema.{dotted_name}.distribution_warning",
+                "message": f"Mean {round(float(mean_value), 6)} is near the lower bound and may indicate a broken or collapsed distribution.",
+            }
+        )
+    if std_value is not None and non_null_count > 1 and float(std_value) == 0.0:
+        annotations.append(
+            {
+                "severity": "WARNING",
+                "code": "zero_variance_distribution",
+                "clause": f"schema.{dotted_name}.distribution_warning",
+                "message": "Observed standard deviation is 0.0 across multiple rows, which may indicate an over-clamped or non-varying signal.",
+            }
+        )
+    return annotations
+
+
+def build_numeric_baselines_from_profiles(
+    profiles: list[dict[str, Any]], contract_id: str
+) -> dict[str, dict[str, Any]]:
+    baselines: dict[str, dict[str, Any]] = {}
+    for profile in profiles:
+        field_name = str(profile.get("name", ""))
+        if not field_name:
+            continue
+        bitol_type = infer_profile_type(profile, field_name)
+        if bitol_type not in {"number", "integer"}:
+            continue
+        stats = profile.get("stats", {}) if isinstance(profile.get("stats"), dict) else {}
+        if stats.get("mean") is None or stats.get("std") is None:
+            continue
+        baselines[field_name] = {
+            "mean": stats.get("mean"),
+            "stddev": stats.get("std"),
+            "minimum": stats.get("min"),
+            "maximum": stats.get("max"),
+            "row_count": int(profile.get("non_null_count", 0) or 0),
+            "source": "generator",
+            "captured_at": datetime.now(timezone.utc).isoformat(),
+            "_contract_id": contract_id,
+        }
+    return baselines
+
+
+def save_numeric_baselines(contract_id: str, baselines: dict[str, dict[str, Any]]) -> None:
+    NUMERIC_BASELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload: dict[str, Any] = {}
+    if NUMERIC_BASELINE_PATH.exists():
+        try:
+            loaded = json.loads(NUMERIC_BASELINE_PATH.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                payload = loaded
+        except json.JSONDecodeError:
+            payload = {}
+    contracts = payload.get("contracts", {}) if isinstance(payload.get("contracts"), dict) else {}
+    contracts[contract_id] = baselines
+    NUMERIC_BASELINE_PATH.write_text(
+        json.dumps(
+            {
+                "contracts": contracts,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
 
 
 def build_array_field_clauses(profiles: list[dict[str, Any]], contract_id: str) -> list[dict[str, Any]]:
@@ -1250,6 +1383,9 @@ def generate_contract_for_source(source_path: Path, output_dir: Path, lineage_pa
     profile_frame = flatten_for_profile(records)
     profile_summary = run_ydata_profile(profile_frame)
     profiles = profile_records(profile_frame)
+    numeric_baselines = build_numeric_baselines_from_profiles(profiles, contract_id)
+    if numeric_baselines:
+        save_numeric_baselines(contract_id, numeric_baselines)
 
     lineage_payload, lineage_snapshot_ref = parse_lineage_payload(lineage_path)
     downstream_nodes = lineage_downstream_nodes(lineage_payload, contract_id, source_path, records)
@@ -1266,6 +1402,7 @@ def generate_contract_for_source(source_path: Path, output_dir: Path, lineage_pa
         registry_entries=registry_entries,
         profile_summary=profile_summary,
     )
+    bitol_contract.setdefault("profiling", {})["numeric_baseline_file"] = make_relative_path(NUMERIC_BASELINE_PATH)
     dbt_schema = build_dbt_schema(bitol_contract, source_path)
     bitol_path, dbt_path = resolve_output_paths_for_preset(str(output_dir), output_name)
     write_yaml(bitol_path, bitol_contract)
@@ -1283,6 +1420,7 @@ def main() -> None:
     if args.all:
         sources = [
             PROJECT_ROOT / "outputs" / "week1" / "intent_records.jsonl",
+            PROJECT_ROOT / "outputs" / "week2" / "verdicts.jsonl",
             PROJECT_ROOT / "outputs" / "week3" / "extractions.jsonl",
             PROJECT_ROOT / "outputs" / "week4" / "lineage_snapshots.jsonl",
             PROJECT_ROOT / "outputs" / "week5" / "events.jsonl",

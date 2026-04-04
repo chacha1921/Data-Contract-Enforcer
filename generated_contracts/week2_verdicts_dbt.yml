@@ -1,0 +1,293 @@
+version: 2
+models:
+- name: week2_verdicts
+  description: Generated schema contract for week2-verdict-records
+  columns:
+  - name: confidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: number
+    tests:
+    - not_null
+  - name: evaluated_at
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+  - name: overall_score
+    description: Auto-generated from verdicts.jsonl
+    data_type: number
+    tests:
+    - not_null
+  - name: overall_verdict
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - PASS
+  - name: rubric_id
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - 63a61ad87a88cd0f38e79b8b0152edd717600073101e391024eb0f1f4f11d87e
+  - name: rubric_version
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - 3.0.0
+  - name: scores__Architectural Diagram Analysis__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["submission_report.md contains a Mermaid architecture diagram.", "The
+          diagram shows detective and judicial parallel branches."]'
+  - name: scores__Architectural Diagram Analysis__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Scored from Mermaid diagram presence and explicit parallel-branch labels
+          in the report.
+  - name: scores__Architectural Diagram Analysis__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Chief Justice Synthesis Engine__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["Chief Justice computes a deterministic score in Python.", "Chief Justice
+          includes a fallback path when LLM synthesis fails.", "Chief Justice emits
+          structured criterion results."]'
+  - name: scores__Chief Justice Synthesis Engine__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Scored from deterministic synthesis and structured result handling in src/nodes/justice.py.
+  - name: scores__Chief Justice Synthesis Engine__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Git Forensic Analysis__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '[".git metadata is present in the repo snapshot.", "rubric.json explicitly
+          expects iterative git-history analysis."]'
+  - name: scores__Git Forensic Analysis__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Scored from repository snapshot availability rather than a live cloned history.
+  - name: scores__Git Forensic Analysis__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Graph Orchestration Architecture__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["StateGraph builder exists in src/graph.py.", "Conditional routing is
+          implemented in src/graph.py.", "Detective fan-out nodes are declared.",
+          "Chief Justice fan-in node is declared."]'
+  - name: scores__Graph Orchestration Architecture__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Computed from StateGraph construction, fan-out/fan-in nodes, and conditional
+          edges.
+  - name: scores__Graph Orchestration Architecture__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Judicial Nuance and Dialectics__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["Prosecutor persona prompt is distinct and adversarial.", "Defense persona
+          prompt is distinct and mitigation-oriented.", "Tech Lead persona prompt
+          is distinct and pragmatic."]'
+  - name: scores__Judicial Nuance and Dialectics__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Derived from the presence of separate judge prompts and roles in src/nodes/judges.py.
+  - name: scores__Judicial Nuance and Dialectics__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Report Accuracy (Cross-Reference)__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["Report discussion aligns with src/graph.py.", "Report discussion aligns
+          with src/nodes/judges.py.", "Report discussion aligns with src/nodes/justice.py.",
+          "Report discussion aligns with src/state.py."]'
+  - name: scores__Report Accuracy (Cross-Reference)__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Cross-reference is approximated from report claims and matching source-file
+          presence in the repository snapshot.
+  - name: scores__Report Accuracy (Cross-Reference)__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Safe Tool Engineering__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["Repository cloning is sandboxed with tempfile.TemporaryDirectory().",
+          "Git commands use subprocess.run with captured output.", "AST analysis explicitly
+          scans for unsafe os.system usage."]'
+  - name: scores__Safe Tool Engineering__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Based on clone sandboxing, subprocess usage, and explicit security checks
+          in detective analysis.
+  - name: scores__Safe Tool Engineering__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__State Management Rigor__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["AgentState uses TypedDict in src/state.py.", "Evidence, JudicialOpinion,
+          CriterionResult, and AuditReport inherit from BaseModel.", "AgentState uses
+          operator.ior reducer for evidence merging.", "AgentState uses operator.add
+          reducer for judicial opinions."]'
+  - name: scores__State Management Rigor__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Derived directly from typed state and reducer definitions in src/state.py.
+  - name: scores__State Management Rigor__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Structured Output Enforcement__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["Judge nodes use with_structured_output(JudicialOpinion).", "Judge nodes
+          retry after malformed structured output.", "Structured output is validated
+          against the JudicialOpinion model."]'
+  - name: scores__Structured Output Enforcement__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Scored from structured-output binding and retry logic in judge nodes.
+  - name: scores__Structured Output Enforcement__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: scores__Theoretical Depth (Documentation)__evidence
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - '["submission_report.md explains Dialectical Synthesis.", "submission_report.md
+          explains Metacognition.", "submission_report.md explains Fan-Out.", "submission_report.md
+          explains Fan-In."]'
+  - name: scores__Theoretical Depth (Documentation)__notes
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - Computed from substantive terminology present in submission_report.md.
+  - name: scores__Theoretical Depth (Documentation)__score
+    description: Auto-generated from verdicts.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: target_ref
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - submission_report.md
+  - name: verdict_id
+    description: Auto-generated from verdicts.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - e74eb79b-567b-4171-9083-72d61bd37bac

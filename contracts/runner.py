@@ -14,7 +14,8 @@ import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BASELINE_PATH = PROJECT_ROOT / "schema_snapshots" / "baselines.json"
+BASELINE_PATH = PROJECT_ROOT / "schema_snapshots" / "numeric_column_baselines.json"
+LEGACY_BASELINE_PATH = PROJECT_ROOT / "schema_snapshots" / "baselines.json"
 UUID_PATTERN = re.compile(r"^[0-9a-f-]{36}$")
 NUMERIC_TYPES = {"number", "integer"}
 VALID_MODES = {"AUDIT", "ENFORCE", "WARN"}
@@ -533,9 +534,10 @@ def build_baselines(frame: pd.DataFrame, fields: list[dict[str, Any]], contract_
 
 
 def load_baselines(contract_id: str) -> dict[str, dict[str, Any]]:
-	if not BASELINE_PATH.exists():
+	baseline_path = BASELINE_PATH if BASELINE_PATH.exists() else LEGACY_BASELINE_PATH
+	if not baseline_path.exists():
 		return {}
-	payload = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
+	payload = json.loads(baseline_path.read_text(encoding="utf-8"))
 	if not isinstance(payload, dict):
 		return {}
 

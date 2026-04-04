@@ -25,6 +25,7 @@ DEFAULT_LLM_RATE_BASELINE = PROJECT_ROOT / "schema_snapshots" / "llm_output_viol
 DEFAULT_EMBEDDING_OUTPUT = VALIDATION_REPORTS_DIR / "embedding_drift.json"
 DEFAULT_PROMPT_OUTPUT = VALIDATION_REPORTS_DIR / "week3_prompt_validation.json"
 DEFAULT_VERDICT_OUTPUT = VALIDATION_REPORTS_DIR / "week2_verdict_violation_rate.json"
+DEFAULT_AI_WARNING_LOG = PROJECT_ROOT / "violation_log" / "ai_warnings.jsonl"
 EXPECTED_VERDICTS = {"PASS", "FAIL", "WARN"}
 EMBEDDING_MODEL = "text-embedding-3-small"
 PROMPT_INPUT_NAMESPACE = uuid.UUID("7b0a0600-9677-4bc9-af8d-0f7d779f1dad")
@@ -64,6 +65,7 @@ def parse_args() -> argparse.Namespace:
     verdict.add_argument("--baseline", default=str(DEFAULT_LLM_RATE_BASELINE), help="Path to verdict-rate baseline JSON file.")
     verdict.add_argument("--output", default=str(DEFAULT_VERDICT_OUTPUT), help="Path to the JSON result output.")
     verdict.add_argument("--warn-threshold", type=float, default=0.02, help="Warning threshold for schema violation rate.")
+    verdict.add_argument("--violation-log", default=str(DEFAULT_AI_WARNING_LOG), help="Path to append structured AI warning entries when violation rates are high.")
 
     run_all = subparsers.add_parser("run-all", help="Execute all AI extension checks and refresh the aggregate output.")
     run_all.add_argument("--week3-input", default=str(DEFAULT_WEEK3_PATH), help="Path to Week 3 JSONL input.")
@@ -74,6 +76,7 @@ def parse_args() -> argparse.Namespace:
     run_all.add_argument("--verdict-baseline", default=str(DEFAULT_LLM_RATE_BASELINE), help="Path to verdict-rate baseline JSON file.")
     run_all.add_argument("--threshold", type=float, default=0.15, help="Cosine distance alert threshold.")
     run_all.add_argument("--warn-threshold", type=float, default=0.02, help="Warning threshold for schema violation rate.")
+    run_all.add_argument("--violation-log", default=str(DEFAULT_AI_WARNING_LOG), help="Path to append structured AI warning entries when violation rates are high.")
     run_all.add_argument("--sample-size", type=int, default=200, help="Maximum number of text samples to embed.")
     return parser.parse_args()
 
@@ -85,6 +88,22 @@ def now_iso() -> str:
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def append_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
+    if not records:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def relative_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -380,6 +399,7 @@ def run_verdict_violation_rate(
     output_path: Path,
     *,
     warn_threshold: float,
+    violation_log_path: Path,
 ) -> dict[str, Any]:
     records = load_jsonl_records(input_path)
     grouped: dict[str, list[dict[str, Any]]] = {}
@@ -468,6 +488,36 @@ def run_verdict_violation_rate(
         ),
     }
     write_json(output_path, payload)
+    if status == "WARN":
+        append_jsonl(
+            violation_log_path,
+            [
+                {
+                    "violation_id": str(uuid.uuid4()),
+                    "event_type": "ai_contract_warning",
+                    "event_version": "1.0",
+                    "source": "ai_extensions",
+                    "check_id": f"week2.overall_verdict.llm_output_schema_violation_rate.{item['prompt_version']}",
+                    "detected_at": payload["run_timestamp"],
+                    "severity": "WARNING",
+                    "status": "WARN",
+                    "contract_id": "week2-verdict-records",
+                    "field": "overall_verdict",
+                    "check_type": payload["check"],
+                    "prompt_version": item["prompt_version"],
+                    "violation_rate": item["violation_rate"],
+                    "warn_threshold": warn_threshold,
+                    "trend": item["trend"],
+                    "report_path": relative_path(output_path),
+                    "message": (
+                        f"Prompt version {item['prompt_version']} has LLM output schema violation rate {item['violation_rate']} "
+                        f"above warning threshold {warn_threshold}."
+                    ),
+                }
+                for item in per_version
+                if item["status"] == "WARN"
+            ],
+        )
     return payload
 
 
@@ -549,6 +599,7 @@ def run_all(args: argparse.Namespace) -> dict[str, Any]:
         Path(args.verdict_baseline),
         output_dir / DEFAULT_VERDICT_OUTPUT.name,
         warn_threshold=args.warn_threshold,
+        violation_log_path=Path(args.violation_log),
     )
     aggregate = build_ai_extensions_aggregate()
     return {
@@ -583,6 +634,7 @@ def main() -> None:
                 Path(args.baseline),
                 Path(args.output),
                 warn_threshold=args.warn_threshold,
+                violation_log_path=Path(args.violation_log),
             )
             build_ai_extensions_aggregate()
         elif args.command == "run-all":

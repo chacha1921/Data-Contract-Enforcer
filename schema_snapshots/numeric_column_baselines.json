@@ -1,0 +1,297 @@
+{
+  "contracts": {
+    "week1-intent-records": {
+      "code_refs__confidence": {
+        "mean": 0.755,
+        "stddev": 0.112583,
+        "minimum": 0.56,
+        "maximum": 0.82,
+        "row_count": 16,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.275511+00:00",
+        "_contract_id": "week1-intent-records"
+      },
+      "code_refs__index": {
+        "mean": 1.5,
+        "stddev": 1.118034,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "row_count": 16,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.275533+00:00",
+        "_contract_id": "week1-intent-records"
+      },
+      "code_refs__line_end": {
+        "mean": 15.4375,
+        "stddev": 22.931879,
+        "minimum": 1.0,
+        "maximum": 96.0,
+        "row_count": 16,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.275539+00:00",
+        "_contract_id": "week1-intent-records"
+      },
+      "code_refs__line_start": {
+        "mean": 15.4375,
+        "stddev": 22.931879,
+        "minimum": 1.0,
+        "maximum": 96.0,
+        "row_count": 16,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.275543+00:00",
+        "_contract_id": "week1-intent-records"
+      }
+    },
+    "week2-verdict-records": {
+      "confidence": {
+        "mean": 0.86,
+        "stddev": 0.0,
+        "minimum": 0.86,
+        "maximum": 0.86,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869477+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "overall_score": {
+        "mean": 4.8,
+        "stddev": 0.0,
+        "minimum": 4.8,
+        "maximum": 4.8,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869492+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Architectural Diagram Analysis__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869505+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Chief Justice Synthesis Engine__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869510+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Git Forensic Analysis__score": {
+        "mean": 4.0,
+        "stddev": 0.0,
+        "minimum": 4.0,
+        "maximum": 4.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869515+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Graph Orchestration Architecture__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869519+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Judicial Nuance and Dialectics__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869532+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Report Accuracy (Cross-Reference)__score": {
+        "mean": 4.0,
+        "stddev": 0.0,
+        "minimum": 4.0,
+        "maximum": 4.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869536+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Safe Tool Engineering__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869539+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__State Management Rigor__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869543+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Structured Output Enforcement__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869547+00:00",
+        "_contract_id": "week2-verdict-records"
+      },
+      "scores__Theoretical Depth (Documentation)__score": {
+        "mean": 5.0,
+        "stddev": 0.0,
+        "minimum": 5.0,
+        "maximum": 5.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:45.869551+00:00",
+        "_contract_id": "week2-verdict-records"
+      }
+    },
+    "week3-document-refinery-extractions": {
+      "extracted_facts__confidence": {
+        "mean": 0.90023,
+        "stddev": 0.003384,
+        "minimum": 0.9,
+        "maximum": 0.95,
+        "row_count": 652,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:46.483732+00:00",
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "extracted_facts__index": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "row_count": 652,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:46.483744+00:00",
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "language_confidence": {
+        "mean": 0.99954,
+        "stddev": 0.006768,
+        "minimum": 0.9,
+        "maximum": 1.0,
+        "row_count": 652,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:46.483749+00:00",
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "page_number": {
+        "mean": 29.455521,
+        "stddev": 15.604767,
+        "minimum": 1.0,
+        "maximum": 60.0,
+        "row_count": 652,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:46.483753+00:00",
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "processing_time_seconds": {
+        "mean": 38.654868,
+        "stddev": 1.704213,
+        "minimum": 38.539,
+        "maximum": 63.7209,
+        "row_count": 652,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:46.483756+00:00",
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "text_length": {
+        "mean": 121.084356,
+        "stddev": 186.995023,
+        "minimum": 1.0,
+        "maximum": 1035.0,
+        "row_count": 652,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:46.483760+00:00",
+        "_contract_id": "week3-document-refinery-extractions"
+      }
+    },
+    "week4-cartographer-lineage": {
+      "edges__index": {
+        "mean": 1.5,
+        "stddev": 1.118034,
+        "minimum": 0.0,
+        "maximum": 3.0,
+        "row_count": 4,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:47.446415+00:00",
+        "_contract_id": "week4-cartographer-lineage"
+      }
+    },
+    "week5-ledger-events": {
+      "event_version": {
+        "mean": 1.017529,
+        "stddev": 0.131232,
+        "minimum": 1.0,
+        "maximum": 2.0,
+        "row_count": 1198,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:48.300914+00:00",
+        "_contract_id": "week5-ledger-events"
+      },
+      "requested_amount_usd": {
+        "mean": 1883931.034483,
+        "stddev": 1384340.672917,
+        "minimum": 247000.0,
+        "maximum": 6349000.0,
+        "row_count": 29,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:48.300930+00:00",
+        "_contract_id": "week5-ledger-events"
+      },
+      "sequence_number": {
+        "mean": 5.335559,
+        "stddev": 3.242444,
+        "minimum": 1.0,
+        "maximum": 13.0,
+        "row_count": 1198,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:48.300934+00:00",
+        "_contract_id": "week5-ledger-events"
+      }
+    },
+    "langsmith-traces": {
+      "total_cost": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:49.519189+00:00",
+        "_contract_id": "langsmith-traces"
+      },
+      "total_tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "row_count": 1,
+        "source": "generator",
+        "captured_at": "2026-04-04T22:58:49.519208+00:00",
+        "_contract_id": "langsmith-traces"
+      }
+    }
+  },
+  "updated_at": "2026-04-04T22:58:49.519668+00:00"
+}

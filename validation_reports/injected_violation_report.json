@@ -1,0 +1,17 @@
+{
+  "report_id": "audit-injected-violation",
+  "contract_id": "week5_events",
+  "run_timestamp": "2026-04-04T22:45:00+00:00",
+  "results": [
+    {
+      "check_id": "injected:payload_version",
+      "column_name": "payload_version",
+      "check_type": "required",
+      "status": "FAIL",
+      "actual_value": null,
+      "expected": true,
+      "severity": "HIGH",
+      "message": "Intentional injected violation for evaluator verification of attribution output."
+    }
+  ]
+}

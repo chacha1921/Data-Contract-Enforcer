@@ -1,152 +1,15 @@
-# Data-Contract-Enforcer
+# Data Contract Enforcer
 
-Data-Contract-Enforcer is a small data quality project for generating, validating, and preflighting Bitol-compatible data contracts from JSONL datasets.
+This repository is submission-ready around six evaluator-facing entrypoints:
 
-The repository focuses on four submission datasets:
+1. `contracts/generator.py`
+2. `contracts/runner.py`
+3. `contracts/attributor.py`
+4. `contracts/schema_analyzer.py`
+5. `contracts/ai_extensions.py`
+6. `contracts/report_generator.py`
 
-- Week 1 intent records in `outputs/week1/intent_records.jsonl`
-- Week 2 verdict records in `outputs/week2/verdicts.jsonl`
-- Week 3 document extractions in `outputs/week3/extractions.jsonl`
-- Week 5 event records in `outputs/week5/events.jsonl`
-
-It includes:
-
-- a contract generator that profiles source data and emits Bitol + dbt YAML
-- a validation runner that checks structure, types, ranges, UUIDs, and drift
-- a migration script for rebuilding Week 1-5 submission data from repo-backed sources
-- a contract registry used for blast-radius context and subscriber attribution
-- a preflight checker that audits the repository against the Thursday submission requirements
-
-## Current Data Sources
-
-The current submission outputs are sourced from the real repository data stored under `repos/`:
-
-- Week 1 outputs are built from `repos/week1/.orchestration/active_intents.yaml` and `repos/week1/.orchestration/agent_trace.jsonl`
-- Week 2 outputs are built from `repos/week2/rubric.json`, `repos/week2/src/state.py`, and related Week 2 audit source files
-- Week 3 outputs are built from `repos/week3/.refinery/extraction_ledger.jsonl`, `repos/week3/.refinery/extracted/`, and `repos/week3/.refinery/profiles/`
-- Week 5 outputs are built from `repos/week5/data/seed_events.jsonl`
-
-The repo-backed submission outputs were rebuilt into:
-
-- `outputs/week1/intent_records.jsonl`
-- `outputs/week2/verdicts.jsonl`
-- `outputs/week3/extractions.jsonl`
-- `outputs/week5/events.jsonl`
-
-using `outputs/migrate/build_real_submission_data.py` and then normalized with `outputs/migrate/align_data.py` before contract generation and validation.
-
-## Repository Layout
-
-```text
-contracts/
-	generator.py          Generate Bitol and dbt contracts from JSONL
-	runner.py             Validate JSONL against generated contracts
-outputs/
-	migrate/
-		align_data.py       Normalize Week 3 and Week 5 source files
-	week1/
-		intent_records.jsonl Week 1 intent dataset
-	week2/
-		verdicts.jsonl      Week 2 verdict dataset
-	week3/
-		extractions.jsonl   Week 3 extraction dataset
-	week5/
-		events.jsonl        Week 5 event dataset
-contract_registry/
-	subscriptions.yaml   Subscriber registry used for contract lineage context
-generated_contracts/    Generated Bitol and dbt contract files
-schema_snapshots/       Baseline statistics for drift checks
-validation_reports/     JSON output from ValidationRunner
-DOMAIN_NOTES.md         Phase 0 domain write-up
-SUBMISSION_CHECKLIST.md Manual submission checklist
-preflight_submission.py Automated submission readiness checker
-```
-
-## What The Project Does
-
-### Contract Generation
-
-`contracts/generator.py` reads JSON or JSONL input, flattens nested records, profiles columns, and writes:
-
-- a Bitol-compatible YAML contract
-- a dbt schema YAML companion
-- a timestamped schema snapshot in `schema_snapshots/{contract_id}/`
-
-Key features:
-
-- CLI args for `--source`, `--contract-id`, `--lineage`, `--registry`, and `--output`
-- flattening support for array-heavy payloads like Week 3 `extracted_facts` and Week 4 `nodes` / `edges`
-- structural profiles for dtype, null fraction, and cardinality
-- optional `--contract-id` and `--lineage` arguments
-- evaluator-friendly defaults from the source path
-- numeric statistics including `min`, `max`, `mean`, `stddev`, `p95`, and `p99`
-- lineage enrichment from Week 4 snapshots and subscriber enrichment from `contract_registry/subscriptions.yaml`
-- confidence-field guards that force the `0.0`-`1.0` range and document the `0-100` scale shift as a breaking change
-
-Default filename mapping:
-
-- `outputs/week3/extractions.jsonl` → `generated_contracts/week3_extractions.yaml`
-- `outputs/week5/events.jsonl` → `generated_contracts/week5_events.yaml`
-
-dbt companions are written as:
-
-- `generated_contracts/week3_extractions_dbt.yml`
-- `generated_contracts/week5_events_dbt.yml`
-
-### Validation
-
-`contracts/runner.py` validates JSONL records against a Bitol contract.
-
-Implemented checks include:
-
-- required-field checks
-- type checks
-- UUID format checks
-- numeric range checks
-- statistical drift checks against `schema_snapshots/baselines.json`
-
-Drift behavior:
-
-- first run initializes the baseline file from current numeric columns
-- later runs emit `WARNING` if mean drift exceeds `2 * stddev`
-- later runs emit `FAIL` with `CRITICAL` severity if mean drift exceeds `3 * stddev`
-
-Validation reports are written to `validation_reports/` as JSON.
-
-### Migration
-
-`outputs/migrate/align_data.py` prepares the submission datasets for contract generation.
-
-Week 3 alignment:
-
-- ensures each record has a UUIDv4 `doc_id`
-- ensures each `extracted_facts[].confidence` is a float between `0.0` and `1.0`
-- rescales confidence values above `1.0` by dividing by `100`
-
-Week 5 alignment:
-
-- ensures `recorded_at >= occurred_at`
-- normalizes timestamps to ISO 8601 UTC form
-- resets `sequence_number` to start at `1` and increase per `aggregate_id`
-
-### Preflight Submission Check
-
-`preflight_submission.py` verifies repository readiness before submission.
-
-It checks:
-
-- `DOMAIN_NOTES.md` word count and section presence
-- placeholder text still left in the domain notes template
-- expected generated contracts and dbt files
-- minimum JSONL record counts for Week 3 and Week 5
-- presence and shape of at least one validation report
-- presence of runnable scripts and the migration script
-
-## Setup
-
-This repo uses Python 3.13 and a local virtual environment.
-
-If you are setting up from scratch:
+## Fresh clone setup
 
 ```bash
 python -m venv .venv
@@ -154,78 +17,102 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-If you are already using the repo venv:
+The repository already contains real source-backed outputs under `outputs/`, generated contracts under `generated_contracts/`, timestamped snapshots under `schema_snapshots/`, validation JSON under `validation_reports/`, and the machine-generated report under `enforcer_report/`.
 
-```bash
-source .venv/bin/activate
-```
+## Quick verification guide
 
-## Typical Workflow
-
-### 1. Align the raw outputs
-
-```bash
-python outputs/migrate/align_data.py
-```
-
-This rewrites:
-
-- `outputs/week3/extractions.jsonl`
-- `outputs/week5/events.jsonl`
-
-### 2. Generate contracts
-
-Evaluator-compatible commands:
+### 1. Generate contracts
 
 ```bash
 python contracts/generator.py --source outputs/week3/extractions.jsonl --output generated_contracts/
 python contracts/generator.py --source outputs/week5/events.jsonl --output generated_contracts/
 ```
 
-Optional explicit form:
+Expected outputs:
 
-```bash
-python contracts/generator.py \
-	--source outputs/week3/extractions.jsonl \
-	--contract-id week3_extractions \
-	--lineage outputs/week4/lineage_snapshots.jsonl \
-	--registry contract_registry/subscriptions.yaml \
-	--output generated_contracts/
-```
+- `generated_contracts/week3_extractions.yaml`
+- `generated_contracts/week3_extractions_dbt.yml`
+- `generated_contracts/week5_events.yaml`
+- `generated_contracts/week5_events_dbt.yml`
+- fresh timestamped snapshots in `schema_snapshots/week3-document-refinery-extractions/` and `schema_snapshots/week5-ledger-events/`
 
-### 3. Run validation
+### 2. Run validation
 
 ```bash
 python contracts/runner.py --contract generated_contracts/week3_extractions.yaml --data outputs/week3/extractions.jsonl
 python contracts/runner.py --contract generated_contracts/week5_events.yaml --data outputs/week5/events.jsonl
 ```
 
-Expected effects:
+Expected outputs:
 
-- writes a JSON report in `validation_reports/`
-- creates `schema_snapshots/baselines.json` on the first real run
+- runner JSON in `validation_reports/`
+- validation reports may include real `FAIL` rows from the provided datasets; these are used later by the attributor
 
-### 4. Run preflight
-
-```bash
-python preflight_submission.py
-```
-
-JSON output mode:
+### 3. Attribute violations
 
 ```bash
-python preflight_submission.py --json
+python contracts/attributor.py --violation validation_reports/week3_extractions_runner_report.json --output violation_log/violations.jsonl
+python contracts/attributor.py --violation validation_reports/week5_events_runner_report.json --output violation_log/violations.jsonl
 ```
 
-## Generated Artifacts
+Expected output:
 
-After a complete successful run, the repository should contain at least:
+- appended JSONL records in `violation_log/violations.jsonl`
+- each record contains `violation_id`, `check_id`, `blame_chain`, and `blast_radius`
 
-- `generated_contracts/week3_extractions.yaml`
-- `generated_contracts/week3_extractions_dbt.yml`
-- `generated_contracts/week5_events.yaml`
-- `generated_contracts/week5_events_dbt.yml`
-- `validation_reports/*.json`
+The repository already includes multiple real attributed violations plus one documented injected record for evaluator inspection.
+
+### 4. Analyze schema evolution
+
+```bash
+python contracts/schema_analyzer.py --contract-id week7-breaking-demo --output validation_reports/schema_evolution_week7_breaking_demo.json
+```
+
+Expected outputs:
+
+- `validation_reports/schema_evolution_week7_breaking_demo.json`
+- summary compatibility verdict of `BREAKING`
+- at least one generated migration impact report in `validation_reports/`
+
+This demo fixture is intentional so the evaluator can verify breaking-change classification without modifying the live contracts.
+
+### 5. Run AI contract extensions
+
+```bash
+python contracts/ai_extensions.py run-all --week3-input outputs/week3/extractions.jsonl --week2-input outputs/week2/verdicts.jsonl --output-dir validation_reports
+```
+
+Expected outputs:
+
+- `validation_reports/embedding_drift.json`
+- `validation_reports/week3_prompt_validation.json`
+- `validation_reports/week2_verdict_violation_rate.json`
+- `validation_reports/ai_extensions.json`
+
+### 6. Generate the enforcer report
+
+```bash
+python contracts/report_generator.py --output enforcer_report/report_$(date +%Y%m%d).pdf
+```
+
+Expected outputs:
+
+- `enforcer_report/report_data.json`
+- a PDF report in `enforcer_report/`
+- `report_data.json` includes `data_health_score.score` between `0` and `100`
+
+## Important repository artifacts
+
+- `schema_snapshots/` contains at least two timestamped snapshots per contract directory used by the analyzer
+- `violation_log/violations.jsonl` contains real attributed violations and a documented injected record
+- `enforcer_report/report_data.json` is machine-generated
+- `DOMAIN_NOTES.md` documents the Week 7 contract domain and architecture decisions
+
+## Notes for evaluators
+
+- The Week 3 and Week 5 datasets intentionally retain some real quality issues so the validation and attribution flow produces meaningful evidence.
+- The breaking schema demo under `schema_snapshots/week7-breaking-demo/` exists only to prove that `contracts/schema_analyzer.py` classifies a breaking change and emits a migration impact report.
+- If OpenAI credentials are available, the AI extension commands refresh live embedding and output-schema checks; otherwise the existing checked-in validation artifacts remain available for inspection.
 - `schema_snapshots/baselines.json`
 
 ## Submission Requirements Summary

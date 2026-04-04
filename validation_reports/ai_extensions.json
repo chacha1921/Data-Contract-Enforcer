@@ -1,0 +1,83 @@
+{
+  "status": "BASELINE_SET",
+  "generated_at": "2026-04-04T22:32:36.824626+00:00",
+  "embedding_drift_score": 0.0327,
+  "embedding_drift_within_threshold": true,
+  "prompt_input_validation_status": "PASS",
+  "output_schema_violation_rate": 0.0,
+  "output_schema_violation_trend": "stable",
+  "ai_system_reliable": true,
+  "risk_assessment": "AI systems are currently consuming reliable data; embedding drift is within threshold and the LLM output schema violation rate is stable.",
+  "embedding_drift": {
+    "check": "embedding_drift",
+    "status": "PASS",
+    "drift_score": 0.0327,
+    "threshold": 0.15,
+    "sample_size": 200,
+    "baseline": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/schema_snapshots/embedding_baselines.npz",
+    "embedding_model": "text-embedding-3-small",
+    "monitored_field": "extracted_facts[*].text",
+    "resolved_source_field": "extracted_facts[*].value",
+    "run_timestamp": "2026-04-04T22:32:36.806422+00:00",
+    "message": "Embedding drift is within the acceptable threshold."
+  },
+  "prompt_input_validation": {
+    "check": "prompt_input_validation",
+    "status": "PASS",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "required": [
+        "doc_id",
+        "source_path",
+        "content_preview"
+      ],
+      "properties": {
+        "doc_id": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36
+        },
+        "source_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_preview": {
+          "type": "string",
+          "maxLength": 8000
+        }
+      },
+      "additionalProperties": false
+    },
+    "total_records": 652,
+    "valid_records": 652,
+    "invalid_records": 0,
+    "quarantine_file": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/outputs/quarantine/prompt_input_quarantine_20260404_223236.jsonl",
+    "monitored_object": "week3_extraction_prompt_metadata",
+    "run_timestamp": "2026-04-04T22:32:36.823300+00:00",
+    "message": "All derived Week 3 prompt metadata objects conform to the prompt input schema."
+  },
+  "llm_output_schema_violation_rate": {
+    "check": "llm_output_schema_violation_rate",
+    "status": "BASELINE_SET",
+    "total_outputs": 1,
+    "schema_violations": 0,
+    "violation_rate": 0.0,
+    "warn_threshold": 0.02,
+    "trend": "stable",
+    "per_prompt_version": [
+      {
+        "prompt_version": "3.0.0",
+        "total_outputs": 1,
+        "schema_violations": 0,
+        "violation_rate": 0.0,
+        "baseline_rate": null,
+        "trend": "unknown",
+        "status": "PASS"
+      }
+    ],
+    "baseline": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/schema_snapshots/llm_output_violation_baseline.json",
+    "run_timestamp": "2026-04-04T22:32:36.824409+00:00",
+    "message": "Output schema violation baselines were created for the observed prompt versions."
+  }
+}

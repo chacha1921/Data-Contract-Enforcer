@@ -1,0 +1,89 @@
+{
+  "contract_id": "week7-breaking-demo",
+  "generated_at": "2026-04-04T22:42:34.180042+00:00",
+  "comparison": {
+    "previous_snapshot": "schema_snapshots/week7-breaking-demo/20260404_220000.yaml",
+    "current_snapshot": "schema_snapshots/week7-breaking-demo/20260404_221000.yaml",
+    "previous_captured_at": "2026-04-04T22:00:00+00:00",
+    "current_captured_at": "2026-04-04T22:10:00+00:00"
+  },
+  "compatibility_verdict": "BREAKING",
+  "human_readable_diff": [
+    "Field amount changed from nullable to required.",
+    "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+    "Change type for amount from number to integer."
+  ],
+  "exact_diff": [
+    {
+      "change_type": "add_required_field",
+      "compatibility": "BREAKING",
+      "summary": "Field amount changed from nullable to required.",
+      "human_diff": "Field amount changed from nullable to required.",
+      "required_action": "Coordinate with all producers. Provide default or migration script. Block deploy until all producers updated.",
+      "real_tool_handling": "Confluent BACKWARD mode: blocks.",
+      "details": {
+        "from": false,
+        "to": true
+      },
+      "field": "amount"
+    },
+    {
+      "change_type": "narrow_constraints",
+      "compatibility": "BREAKING",
+      "summary": "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+      "human_diff": "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+      "required_action": "Coordinate a migration window and confirm all subscribers can tolerate the narrower value range before deployment.",
+      "real_tool_handling": "Contract validation tools treat tighter bounds as breaking when existing payloads can fall outside the new range.",
+      "details": {
+        "from": {
+          "minimum": 0.0,
+          "maximum": 100.0
+        },
+        "to": {
+          "minimum": 10.0,
+          "maximum": 50.0
+        }
+      },
+      "field": "amount"
+    },
+    {
+      "change_type": "narrow_type",
+      "compatibility": "BREAKING",
+      "summary": "Change type for amount from number to integer.",
+      "human_diff": "Change type for amount from number to integer.",
+      "required_action": "CRITICAL. Requires migration plan with rollback. Registry blast radius report mandatory. Statistical baseline must be re-established after migration.",
+      "real_tool_handling": "Confluent FORWARD mode: blocks. Great Expectations: catches via distribution check.",
+      "details": {
+        "from": "number",
+        "to": "integer"
+      },
+      "field": "amount"
+    }
+  ],
+  "blast_radius": {
+    "registry_subscribers": [],
+    "lineage": {
+      "contract_aliases": [
+        "week7breakingdemo"
+      ],
+      "downstream_nodes": [],
+      "transitive_depth": 0
+    },
+    "total_known_consumers": 0
+  },
+  "per_consumer_failure_mode_analysis": [],
+  "ordered_migration_checklist": [
+    "Review the exact schema diff and confirm the intended contract version bump.",
+    "Notify every affected registry subscriber and capture explicit acknowledgement before deployment.",
+    "Prepare producer changes, default values, aliases, or migration scripts required by the breaking diff.",
+    "Stage the new schema behind a controlled rollout and block deploy until downstream validation passes.",
+    "Re-run ValidationRunner and refresh statistical baselines after the migration lands.",
+    "Publish a rollback-safe data conversion plan and verify no precision or semantic loss in downstream systems."
+  ],
+  "rollback_plan": [
+    "Keep the previous snapshot and generated contract available as the rollback version.",
+    "Re-deploy the prior producer schema if downstream validation or migration checks fail.",
+    "Restore the prior statistical baseline and rerun contract validation against the reverted payloads.",
+    "Notify all affected subscribers that the migration was rolled back and freeze further schema edits until root cause review completes."
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "contract_id": "week3-document-refinery-extractions",
+  "analyzed_at": "2026-04-04T22:14:08.965046+00:00",
+  "since": "7 days ago",
+  "snapshot_directory": "schema_snapshots/week3-document-refinery-extractions",
+  "snapshots_analyzed": [
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215336.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215521.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215521.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215617.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215617.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215724.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215724.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_221247.yaml"
+    }
+  ],
+  "summary": {
+    "comparisons_analyzed": 4,
+    "total_changes_detected": 0,
+    "breaking_comparisons": 0,
+    "compatibility_verdict": "COMPATIBLE"
+  },
+  "comparisons": [
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215336.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215521.yaml",
+      "previous_captured_at": "2026-04-04T21:53:36+00:00",
+      "current_captured_at": "2026-04-04T21:55:21+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215521.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215617.yaml",
+      "previous_captured_at": "2026-04-04T21:55:21+00:00",
+      "current_captured_at": "2026-04-04T21:56:17+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215617.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215724.yaml",
+      "previous_captured_at": "2026-04-04T21:56:17+00:00",
+      "current_captured_at": "2026-04-04T21:57:24+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_215724.yaml",
+      "current_snapshot": "schema_snapshots/week3-document-refinery-extractions/20260404_221247.yaml",
+      "previous_captured_at": "2026-04-04T21:57:24+00:00",
+      "current_captured_at": "2026-04-04T22:12:47+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    }
+  ],
+  "migration_impact_reports": []
+}

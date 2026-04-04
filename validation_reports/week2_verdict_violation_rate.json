@@ -1,9 +1,23 @@
 {
-  "check": "llm_output_violation_rate",
-  "status": "BASELINE_CREATED",
+  "check": "llm_output_schema_violation_rate",
+  "status": "BASELINE_SET",
+  "total_outputs": 1,
+  "schema_violations": 0,
   "violation_rate": 0.0,
-  "record_count": 1,
+  "warn_threshold": 0.02,
+  "trend": "stable",
+  "per_prompt_version": [
+    {
+      "prompt_version": "3.0.0",
+      "total_outputs": 1,
+      "schema_violations": 0,
+      "violation_rate": 0.0,
+      "baseline_rate": null,
+      "trend": "unknown",
+      "status": "PASS"
+    }
+  ],
   "baseline": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/schema_snapshots/llm_output_violation_baseline.json",
-  "run_timestamp": "2026-04-04T20:48:10.794731+00:00",
-  "message": "Violation-rate baseline did not exist and was created from the current data."
+  "run_timestamp": "2026-04-04T22:32:36.824409+00:00",
+  "message": "Output schema violation baselines were created for the observed prompt versions."
 }

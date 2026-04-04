@@ -67,6 +67,17 @@ def load_registry(path: Path) -> list[dict[str, Any]]:
     return [entry for entry in subscriptions if isinstance(entry, dict)]
 
 
+def normalize_identifier(value: str) -> str:
+    return "".join(char for char in str(value).lower() if char.isalnum())
+
+
+def normalize_field_name(value: str) -> str:
+    text = str(value).replace("[*]", "")
+    text = text.replace("__", ".")
+    text = text.replace("..", ".")
+    return text.strip(".")
+
+
 def load_lineage_edges(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Lineage file not found: {path}")
@@ -89,6 +100,18 @@ def find_contract_path(contract_id: str) -> Path | None:
     candidate = GENERATED_CONTRACTS_DIR / f"{contract_id}.yaml"
     if candidate.exists():
         return candidate
+    normalized_id = "".join(char for char in contract_id.lower() if char.isalnum())
+    for yaml_path in GENERATED_CONTRACTS_DIR.glob("*.yaml"):
+        try:
+            payload = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            continue
+        payload_id = payload.get("id") if isinstance(payload, dict) else None
+        if not isinstance(payload_id, str):
+            continue
+        normalized_payload_id = "".join(char for char in payload_id.lower() if char.isalnum())
+        if normalized_payload_id == normalized_id:
+            return yaml_path
     return None
 
 
@@ -101,6 +124,11 @@ def resolve_producer_file(contract_id: str) -> str | None:
     source = lineage.get("source") if isinstance(lineage, dict) else None
     if isinstance(source, str) and source.strip():
         return source.strip()
+    servers = payload.get("servers", {}) if isinstance(payload, dict) else {}
+    local_server = servers.get("local") if isinstance(servers, dict) else None
+    local_path = local_server.get("path") if isinstance(local_server, dict) else None
+    if isinstance(local_path, str) and local_path.strip():
+        return local_path.strip()
     return None
 
 
@@ -108,8 +136,11 @@ def affected_registry_subscribers(
     subscriptions: list[dict[str, Any]], contract_id: str, column_name: str
 ) -> list[dict[str, Any]]:
     affected: list[dict[str, Any]] = []
+    normalized_contract_id = normalize_identifier(contract_id)
+    normalized_column_name = normalize_field_name(column_name)
+    root_name = normalized_column_name.split(".", 1)[0]
     for subscription in subscriptions:
-        if str(subscription.get("contract_id", "")).strip() != contract_id:
+        if normalize_identifier(str(subscription.get("contract_id", ""))) != normalized_contract_id:
             continue
 
         consumed_fields = [str(item) for item in subscription.get("fields_consumed", []) if item]
@@ -118,7 +149,14 @@ def affected_registry_subscribers(
             for item in subscription.get("breaking_fields", [])
             if isinstance(item, dict) and item.get("field")
         }
-        if column_name not in consumed_fields and column_name not in breaking_fields:
+        normalized_consumed = {normalize_field_name(item) for item in consumed_fields}
+        normalized_breaking = {normalize_field_name(item) for item in breaking_fields}
+        if (
+            normalized_column_name not in normalized_consumed
+            and normalized_column_name not in normalized_breaking
+            and root_name not in normalized_consumed
+            and root_name not in normalized_breaking
+        ):
             continue
 
         affected.append(
@@ -126,7 +164,7 @@ def affected_registry_subscribers(
                 "subscriber_id": subscription.get("subscriber_id"),
                 "validation_mode": subscription.get("validation_mode"),
                 "fields_consumed": consumed_fields,
-                "breaking_reason": breaking_fields.get(column_name),
+                "breaking_reason": breaking_fields.get(normalized_column_name) or breaking_fields.get(root_name),
                 "contact": subscription.get("contact"),
             }
         )
@@ -167,12 +205,14 @@ def lineage_enrichment(edges: list[dict[str, Any]], contract_id: str) -> dict[st
 
 
 def parse_git_log_row(row: str, lineage_hops: int) -> dict[str, Any] | None:
-    parts = row.split("|", 3)
-    if len(parts) != 4:
+    parts = row.split("|", 4)
+    if len(parts) != 5:
         return None
-    commit_hash, committed_epoch, author, message = parts
+    commit_hash, author_name, author_email, committed_at_text, message = parts
     try:
-        committed_at = datetime.fromtimestamp(int(committed_epoch), tz=timezone.utc)
+        committed_at = datetime.fromisoformat(committed_at_text.replace(" ", "T", 1))
+        if committed_at.tzinfo is None:
+            committed_at = committed_at.replace(tzinfo=timezone.utc)
     except ValueError:
         return None
 
@@ -180,10 +220,10 @@ def parse_git_log_row(row: str, lineage_hops: int) -> dict[str, Any] | None:
     confidence_score = 1.0 - (days_since_commit * 0.1) - (lineage_hops * 0.2)
     confidence_score = max(0.0, min(1.0, confidence_score))
     return {
-        "commit": commit_hash,
-        "author": author,
-        "message": message,
-        "committed_at": committed_at.isoformat(),
+        "commit_hash": commit_hash,
+        "author": author_email or author_name,
+        "commit_message": message,
+        "commit_timestamp": committed_at.isoformat(),
         "days_since_commit": round(days_since_commit, 3),
         "lineage_hops": lineage_hops,
         "confidence_score": round(confidence_score, 4),
@@ -203,7 +243,7 @@ def recent_commits_for_file(producer_file: str | None, lineage_hops: int) -> lis
         raw_log = repo.git.log(
             "--follow",
             f"--since={(now_utc() - timedelta(days=14)).isoformat()}",
-            "--format=%H|%ct|%an|%s",
+            "--format=%H|%an|%ae|%aI|%s",
             "--",
             relative_to_project(producer_path),
         )
@@ -220,7 +260,7 @@ def recent_commits_for_file(producer_file: str | None, lineage_hops: int) -> lis
 
 def violation_results(report: dict[str, Any]) -> list[dict[str, Any]]:
     results = report.get("results", []) if isinstance(report, dict) else []
-    actionable_statuses = {"FAIL", "ERROR"}
+    actionable_statuses = {"FAIL"}
     actionable: list[dict[str, Any]] = []
     for result in results:
         if not isinstance(result, dict):
@@ -242,28 +282,64 @@ def build_violation_record(
 ) -> dict[str, Any]:
     contract_id = str(report.get("contract_id", "unknown_contract"))
     column_name = str(result.get("column_name", "unknown_column"))
+    detected_at = report.get("run_timestamp") or now_utc().isoformat()
     lineage_info = lineage_enrichment(edges, contract_id)
     blast_radius = affected_registry_subscribers(subscriptions, contract_id, column_name)
     producer_file = resolve_producer_file(contract_id)
     blame_chain = recent_commits_for_file(producer_file, lineage_info["transitive_depth"])
 
+    if not blame_chain:
+        blame_chain = [
+            {
+                "commit_hash": "unknown",
+                "author": "unknown",
+                "commit_message": "No recent git history found for inferred producer file.",
+                "commit_timestamp": now_utc().isoformat(),
+                "days_since_commit": None,
+                "lineage_hops": lineage_info["transitive_depth"],
+                "confidence_score": 0.0,
+            }
+        ]
+
+    ranked_blame_chain = []
+    for rank, candidate in enumerate(blame_chain[:5], start=1):
+        ranked_blame_chain.append(
+            {
+                "rank": rank,
+                "file_path": producer_file or "unknown",
+                "commit_hash": candidate.get("commit_hash"),
+                "author": candidate.get("author"),
+                "commit_timestamp": candidate.get("commit_timestamp"),
+                "commit_message": candidate.get("commit_message"),
+                "confidence_score": candidate.get("confidence_score"),
+            }
+        )
+
+    affected_nodes = [item.get("subscriber_id") for item in blast_radius if item.get("subscriber_id")]
+    affected_nodes = sorted({str(node) for node in affected_nodes if node})
+    affected_pipelines = affected_nodes.copy()
+    records_failing = result.get("records_failing")
+    if isinstance(records_failing, bool):
+        records_failing = int(records_failing)
+    elif not isinstance(records_failing, int):
+        records_failing = 0
+    sample_failing = result.get("sample_failing")
+    if not isinstance(sample_failing, list):
+        sample_failing = []
+
+    violation_id = str(uuid.uuid4())
+
     return {
-        "violation_id": str(uuid.uuid4()),
-        "report_id": report.get("report_id"),
-        "contract_id": contract_id,
-        "snapshot_id": report.get("snapshot_id"),
-        "run_timestamp": report.get("run_timestamp"),
-        "column_name": column_name,
-        "check_type": result.get("check_type"),
-        "status": result.get("status"),
-        "severity": result.get("severity"),
-        "actual_value": result.get("actual_value"),
-        "expected": result.get("expected"),
-        "producer_file": producer_file,
-        "registry_sourced_blast_radius": blast_radius,
-        "lineage_enrichment": lineage_info,
-        "blame_chain": blame_chain,
-        "attributed_at": now_utc().isoformat(),
+        "violation_id": violation_id,
+        "check_id": result.get("check_id"),
+        "detected_at": detected_at,
+        "blame_chain": ranked_blame_chain,
+        "blast_radius": {
+            "affected_nodes": affected_nodes,
+            "affected_pipelines": affected_pipelines,
+            "estimated_records": records_failing,
+            "contamination_depth": lineage_info.get("transitive_depth"),
+        },
     }
 
 

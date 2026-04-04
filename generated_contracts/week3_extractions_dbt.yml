@@ -1,7 +1,7 @@
 version: 2
 models:
 - name: week3_extractions
-  description: Generated schema contract for week3_extractions
+  description: Generated schema contract for week3-document-refinery-extractions
   columns:
   - name: block_id
     description: Auto-generated from extractions.jsonl
@@ -90,6 +90,9 @@ models:
         values:
         - 2013-E.C-Audit-finding-information
         - tax_expenditure_ethiopia_2021_22
+    - relationships:
+        to: ref('week3_extractions')
+        field: doc_id
   - name: status
     description: Auto-generated from extractions.jsonl
     data_type: string

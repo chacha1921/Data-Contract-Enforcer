@@ -1,7 +1,7 @@
 version: 2
 models:
 - name: week5_events
-  description: Generated schema contract for week5_events
+  description: Generated schema contract for week5-ledger-events
   columns:
   - name: aggregate_id
     description: Auto-generated from events.jsonl
@@ -16,7 +16,6 @@ models:
     - accepted_values:
         values:
         - agent
-        - compliance
         - credit
         - docpkg
         - fraud
@@ -69,7 +68,6 @@ models:
     - accepted_values:
         values:
         - acquisition
-        - equipment_financing
         - expansion
         - real_estate
         - refinancing

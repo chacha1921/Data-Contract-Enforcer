@@ -18,6 +18,7 @@ BASELINE_PATH = PROJECT_ROOT / "schema_snapshots" / "baselines.json"
 UUID_PATTERN = re.compile(r"^[0-9a-f-]{36}$")
 NUMERIC_TYPES = {"number", "integer"}
 VALID_MODES = {"AUDIT", "ENFORCE", "WARN"}
+EXPLODE_FIELDS = {"code_refs", "extracted_facts", "nodes", "edges"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -50,16 +51,22 @@ def load_contract(contract_path: Path) -> dict[str, Any]:
 	return payload
 
 
-def load_jsonl_dataframe(data_path: Path) -> pd.DataFrame:
+def load_jsonl_records(data_path: Path) -> list[dict[str, Any]]:
 	if not data_path.exists():
 		raise FileNotFoundError(f"Data file not found: {data_path}")
-	return pd.read_json(data_path, lines=True)
-
-
-def load_jsonl_records(data_path: Path) -> list[dict[str, Any]]:
-	frame = load_jsonl_dataframe(data_path)
-	records = frame.to_dict(orient="records")
-	return [record for record in records if isinstance(record, dict)]
+	records: list[dict[str, Any]] = []
+	with data_path.open("r", encoding="utf-8") as handle:
+		for line_number, line in enumerate(handle, start=1):
+			raw_line = line.strip()
+			if not raw_line:
+				continue
+			payload = json.loads(raw_line)
+			if not isinstance(payload, dict):
+				raise ValueError(
+					f"Expected one JSON object per line in {data_path} at line {line_number}."
+				)
+			records.append(payload)
+	return records
 
 
 def normalize_scalar(value: Any) -> Any:
@@ -104,7 +111,7 @@ def expand_list_field(field_name: str, values: list[Any]) -> list[dict[str, Any]
 def flatten_records(
 	records: list[dict[str, Any]], explode_fields: set[str] | None = None
 ) -> list[dict[str, Any]]:
-	explode_fields = explode_fields or {"extracted_facts", "nodes", "edges"}
+	explode_fields = explode_fields or EXPLODE_FIELDS
 	flattened_rows: list[dict[str, Any]] = []
 
 	for record in records:
@@ -135,6 +142,30 @@ def flatten_records(
 def flatten_for_checks(records: list[dict[str, Any]]) -> pd.DataFrame:
 	rows = flatten_records(records)
 	return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def contract_prefix(contract_id: str) -> str:
+	return contract_id.split("-", 1)[0] if "-" in contract_id else contract_id
+
+
+def pretty_column_name(column_name: str) -> str:
+	root, separator, child = column_name.partition("__")
+	if separator and root in EXPLODE_FIELDS:
+		dotted_child = child.replace("__", ".")
+		return f"{root}[*].{dotted_child}"
+	return column_name.replace("__", ".")
+
+
+def canonical_registry_field(column_name: str) -> str:
+	root, separator, child = column_name.partition("__")
+	if separator and root in EXPLODE_FIELDS:
+		return f"{root}.{child.replace('__', '.')}"
+	return column_name.replace("__", ".")
+
+
+def check_identifier(contract_id: str, column_name: str, check_type: str) -> str:
+	column_key = canonical_registry_field(column_name)
+	return f"{contract_prefix(contract_id)}.{column_key}.{check_type}"
 
 
 def extract_fields(contract: dict[str, Any]) -> list[dict[str, Any]]:
@@ -211,12 +242,12 @@ def json_safe(value: Any) -> Any:
 
 def status_to_severity(status: str, *, fail_severity: str = "CRITICAL") -> str:
 	mapping = {
-		"PASS": "INFO",
-		"WARN": "MEDIUM",
+		"PASS": "LOW",
+		"WARNING": "WARNING",
 		"FAIL": fail_severity,
-		"ERROR": "HIGH",
+		"ERROR": "CRITICAL",
 	}
-	return mapping.get(status, "INFO")
+	return mapping.get(status, "LOW")
 
 
 def make_result(
@@ -228,15 +259,19 @@ def make_result(
 	actual_value: Any,
 	expected: Any,
 	message: str,
+	records_failing: int | None = None,
+	sample_failing: list[Any] | None = None,
 	severity: str | None = None,
 ) -> dict[str, Any]:
 	return {
 		"check_id": check_id,
-		"column_name": column_name,
+		"column_name": pretty_column_name(column_name),
 		"check_type": check_type,
 		"status": status,
 		"actual_value": json_safe(actual_value),
 		"expected": json_safe(expected),
+		"records_failing": records_failing,
+		"sample_failing": json_safe(sample_failing or []),
 		"severity": severity or status_to_severity(status),
 		"message": message,
 	}
@@ -244,13 +279,15 @@ def make_result(
 
 def missing_column_result(column_name: str, check_type: str, expected: Any) -> dict[str, Any]:
 	return make_result(
-		check_id=f"{check_type}:{column_name}",
+		check_id=check_type,
 		column_name=column_name,
 		check_type=check_type,
 		status="ERROR",
 		actual_value=None,
 		expected=expected,
-		severity="HIGH",
+		records_failing=0,
+		sample_failing=[],
+		severity="CRITICAL",
 		message="Column defined in the contract is missing from the data.",
 	)
 
@@ -299,19 +336,24 @@ def is_iso_datetime(value: Any) -> bool:
 
 def validate_required(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any]:
 	column_name = str(field["name"])
+	contract_id = str(field.get("_contract_id", "contract"))
 	if column_name not in frame.columns:
-		return missing_column_result(column_name, "required", True)
+		result = missing_column_result(column_name, "required", True)
+		result["check_id"] = check_identifier(contract_id, column_name, "required")
+		return result
 
 	missing_count = int(frame[column_name].isna().sum())
 	status = "PASS" if missing_count == 0 else "FAIL"
 	return make_result(
-		check_id=f"required:{column_name}",
+		check_id=check_identifier(contract_id, column_name, "required"),
 		column_name=column_name,
 		check_type="required",
 		status=status,
 		actual_value=missing_count,
 		expected=0,
-		severity="CRITICAL" if status == "FAIL" else "INFO",
+		records_failing=missing_count,
+		sample_failing=frame.index[frame[column_name].isna()].tolist()[:5],
+		severity="CRITICAL" if status == "FAIL" else "LOW",
 		message=(
 			"Required field contains no nulls."
 			if status == "PASS"
@@ -322,9 +364,12 @@ def validate_required(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, A
 
 def validate_type(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any]:
 	column_name = str(field["name"])
+	contract_id = str(field.get("_contract_id", "contract"))
 	expected_type = str(field.get("type", "string"))
 	if column_name not in frame.columns:
-		return missing_column_result(column_name, "type_conformance", expected_type)
+		result = missing_column_result(column_name, "type", expected_type)
+		result["check_id"] = check_identifier(contract_id, column_name, "type")
+		return result
 
 	series = frame[column_name]
 	invalid_mask = ~series.apply(lambda value: matches_type(value, expected_type))
@@ -332,13 +377,15 @@ def validate_type(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any]:
 	failing_count = int(len(failing_values.index))
 	status = "PASS" if failing_count == 0 else "FAIL"
 	return make_result(
-		check_id=f"type_conformance:{column_name}",
+		check_id=check_identifier(contract_id, column_name, "type"),
 		column_name=column_name,
-		check_type="type_conformance",
+		check_type="type",
 		status=status,
 		actual_value=None if failing_count == 0 else failing_values.iloc[0],
 		expected=expected_type,
-		severity="CRITICAL" if status == "FAIL" else "INFO",
+		records_failing=failing_count,
+		sample_failing=failing_values.astype(str).tolist()[:5],
+		severity="CRITICAL" if status == "FAIL" else "LOW",
 		message=(
 			"Observed values conform to the contract type."
 			if status == "PASS"
@@ -349,11 +396,14 @@ def validate_type(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any]:
 
 def validate_format(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any] | None:
 	column_name = str(field["name"])
+	contract_id = str(field.get("_contract_id", "contract"))
 	expected_format = field.get("format")
 	if expected_format not in {"uuid", "date-time"}:
 		return None
 	if column_name not in frame.columns:
-		return missing_column_result(column_name, f"format_{expected_format}", expected_format)
+		result = missing_column_result(column_name, "format", expected_format)
+		result["check_id"] = check_identifier(contract_id, column_name, "format")
+		return result
 
 	series = frame[column_name].dropna()
 	if expected_format == "uuid":
@@ -366,15 +416,17 @@ def validate_format(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any
 	failing_count = int(len(failing_values.index))
 	status = "PASS" if failing_count == 0 else "FAIL"
 	return make_result(
-		check_id=f"format_{expected_format}:{column_name}",
+		check_id=check_identifier(contract_id, column_name, "format"),
 		column_name=column_name,
-		check_type=f"format_{expected_format}",
+		check_type="format",
 		status=status,
 		actual_value=None if failing_count == 0 else failing_values.iloc[0],
 		expected=(
 			"^[0-9a-f-]{36}$" if expected_format == "uuid" else "datetime.fromisoformat() compatible"
 		),
-		severity="CRITICAL" if status == "FAIL" else "INFO",
+		records_failing=failing_count,
+		sample_failing=failing_values.astype(str).tolist()[:5],
+		severity="CRITICAL" if status == "FAIL" else "LOW",
 		message=(
 			f"Values match the expected {expected_format} format."
 			if status == "PASS"
@@ -385,16 +437,19 @@ def validate_format(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any
 
 def validate_range(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any] | None:
 	column_name = str(field["name"])
+	contract_id = str(field.get("_contract_id", "contract"))
 	minimum = field.get("minimum")
 	maximum = field.get("maximum")
 	if minimum is None and maximum is None:
 		return None
 	if column_name not in frame.columns:
-		return missing_column_result(
+		result = missing_column_result(
 			column_name,
-			"range_enforcement",
+			"range",
 			{"minimum": minimum, "maximum": maximum},
 		)
+		result["check_id"] = check_identifier(contract_id, column_name, "range")
+		return result
 
 	series = frame[column_name]
 	numeric_series = series.apply(parse_number)
@@ -407,19 +462,30 @@ def validate_range(frame: pd.DataFrame, field: dict[str, Any]) -> dict[str, Any]
 	failing_values = series[invalid_mask]
 	failing_count = int(len(failing_values.index))
 	status = "PASS" if failing_count == 0 else "FAIL"
+	numeric_non_null = numeric_series.dropna()
+	actual_summary = (
+		None
+		if numeric_non_null.empty
+		else f"min={round(float(numeric_non_null.min()), 6)}, max={round(float(numeric_non_null.max()), 6)}, mean={round(float(numeric_non_null.mean()), 6)}"
+	)
+	expected_summary = f"max<={maximum}, min>={minimum}"
+	message = "Numeric values are within the contract range."
+	if status == "FAIL":
+		if "confidence" in column_name.lower():
+			message = "confidence is outside the 0.0–1.0 range. Breaking change detected."
+		else:
+			message = "Numeric values exceed the contract range."
 	return make_result(
-		check_id=f"range_enforcement:{column_name}",
+		check_id=check_identifier(contract_id, column_name, "range"),
 		column_name=column_name,
-		check_type="range_enforcement",
+		check_type="range",
 		status=status,
-		actual_value=None if failing_count == 0 else failing_values.iloc[0],
-		expected={"minimum": minimum, "maximum": maximum},
-		severity="CRITICAL" if status == "FAIL" else "INFO",
-		message=(
-			"Numeric values are within the contract range."
-			if status == "PASS"
-			else "Numeric values exceed the contract range."
-		),
+		actual_value=actual_summary,
+		expected=expected_summary,
+		records_failing=failing_count,
+		sample_failing=failing_values.index.astype(str).tolist()[:5],
+		severity="CRITICAL" if status == "FAIL" else "LOW",
+		message=message,
 	)
 
 
@@ -432,9 +498,28 @@ def numeric_column_names(frame: pd.DataFrame) -> list[str]:
 	return sorted(numeric_columns)
 
 
-def build_baselines(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
+def numeric_contract_columns(frame: pd.DataFrame, fields: list[dict[str, Any]]) -> list[str]:
+	contract_numeric_columns: list[str] = []
+	seen: set[str] = set()
+	for field in fields:
+		column_name = str(field.get("name", ""))
+		if not column_name or column_name in seen:
+			continue
+		if str(field.get("type", "")).lower() not in NUMERIC_TYPES:
+			continue
+		if column_name not in frame.columns:
+			continue
+		numeric_series = pd.to_numeric(frame[column_name], errors="coerce").dropna()
+		if numeric_series.empty:
+			continue
+		contract_numeric_columns.append(column_name)
+		seen.add(column_name)
+	return sorted(contract_numeric_columns)
+
+
+def build_baselines(frame: pd.DataFrame, fields: list[dict[str, Any]], contract_id: str) -> dict[str, dict[str, Any]]:
 	baselines: dict[str, dict[str, Any]] = {}
-	for column_name in numeric_column_names(frame):
+	for column_name in numeric_contract_columns(frame, fields):
 		numeric_series = pd.to_numeric(frame[column_name], errors="coerce").dropna()
 		if numeric_series.empty:
 			continue
@@ -442,22 +527,52 @@ def build_baselines(frame: pd.DataFrame) -> dict[str, dict[str, Any]]:
 			"mean": round(float(numeric_series.mean()), 6),
 			"stddev": round(float(numeric_series.std(ddof=0)), 6),
 			"row_count": int(len(numeric_series.index)),
+			"_contract_id": contract_id,
 		}
 	return baselines
 
 
-def load_baselines() -> dict[str, dict[str, Any]]:
+def load_baselines(contract_id: str) -> dict[str, dict[str, Any]]:
 	if not BASELINE_PATH.exists():
 		return {}
 	payload = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
-	columns = payload.get("columns", {}) if isinstance(payload, dict) else {}
-	return {str(key): value for key, value in columns.items() if isinstance(value, dict)}
+	if not isinstance(payload, dict):
+		return {}
+
+	contracts = payload.get("contracts")
+	if isinstance(contracts, dict):
+		contract_columns = contracts.get(contract_id, {})
+		if isinstance(contract_columns, dict):
+			return {
+				str(key): value
+				for key, value in contract_columns.items()
+				if isinstance(value, dict)
+			}
+		return {}
+
+	legacy_columns = payload.get("columns", {})
+	if not isinstance(legacy_columns, dict):
+		return {}
+	return {
+		str(key): value
+		for key, value in legacy_columns.items()
+		if isinstance(value, dict) and value.get("_contract_id") == contract_id
+	}
 
 
-def save_baselines(baselines: dict[str, dict[str, Any]]) -> None:
+def save_baselines(contract_id: str, baselines: dict[str, dict[str, Any]]) -> None:
 	BASELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
+	existing_payload: dict[str, Any] = {}
+	if BASELINE_PATH.exists():
+		loaded = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
+		if isinstance(loaded, dict):
+			existing_payload = loaded
+	contracts = existing_payload.get("contracts", {})
+	if not isinstance(contracts, dict):
+		contracts = {}
+	contracts[contract_id] = baselines
 	payload = {
-		"columns": baselines,
+		"contracts": contracts,
 		"created_at": now_iso(),
 	}
 	BASELINE_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -467,19 +582,24 @@ def validate_drift(frame: pd.DataFrame, column_name: str, baselines: dict[str, d
 	baseline_entry = baselines.get(column_name)
 	if baseline_entry is None:
 		return None
+	contract_id = str(baseline_entry.get("_contract_id", "contract"))
 	if column_name not in frame.columns:
-		return missing_column_result(column_name, "statistical_drift", baseline_entry)
+		result = missing_column_result(column_name, "statistical_drift", baseline_entry)
+		result["check_id"] = check_identifier(contract_id, column_name, "statistical_drift")
+		return result
 
 	numeric_series = pd.to_numeric(frame[column_name], errors="coerce").dropna()
 	if numeric_series.empty:
 		return make_result(
-			check_id=f"statistical_drift:{column_name}",
+			check_id=check_identifier(contract_id, column_name, "statistical_drift"),
 			column_name=column_name,
 			check_type="statistical_drift",
 			status="ERROR",
 			actual_value=None,
 			expected=baseline_entry,
-			severity="HIGH",
+			records_failing=0,
+			sample_failing=[],
+			severity="CRITICAL",
 			message="Numeric values are unavailable; unable to compute drift.",
 		)
 
@@ -488,13 +608,15 @@ def validate_drift(frame: pd.DataFrame, column_name: str, baselines: dict[str, d
 		baseline_stddev = float(baseline_entry.get("stddev"))
 	except (TypeError, ValueError):
 		return make_result(
-			check_id=f"statistical_drift:{column_name}",
+			check_id=check_identifier(contract_id, column_name, "statistical_drift"),
 			column_name=column_name,
 			check_type="statistical_drift",
 			status="ERROR",
 			actual_value=None,
 			expected=baseline_entry,
-			severity="HIGH",
+			records_failing=0,
+			sample_failing=[],
+			severity="CRITICAL",
 			message="Baseline statistics are invalid; unable to compute drift.",
 		)
 
@@ -507,26 +629,29 @@ def validate_drift(frame: pd.DataFrame, column_name: str, baselines: dict[str, d
 	if z_score > 3:
 		status = "FAIL"
 		severity = "HIGH"
-		message = "Current mean exceeds the fail drift threshold (z-score > 3)."
+		message = "Current mean exceeds the fail drift threshold (z-score > 3). Silent corruption risk detected."
 	elif z_score > 2:
-		status = "WARN"
-		severity = "MEDIUM"
+		status = "WARNING"
+		severity = "WARNING"
 		message = "Current mean exceeds the warning drift threshold (z-score > 2)."
 	else:
 		status = "PASS"
-		severity = "INFO"
+		severity = "LOW"
 		message = "Current mean is within the baseline drift thresholds."
+	actual_value = f"mean={round(current_mean, 6)}, z_score={round(z_score, 6) if z_score != float('inf') else 'inf'}"
+	expected_value = f"baseline_mean={baseline_mean}, stddev={baseline_stddev}, warning>2, fail>3"
+	if "confidence" in column_name.lower() and status == "FAIL":
+		message = "confidence distribution shifted beyond 3 stddev from baseline. Silent corruption detected."
 
 	return make_result(
-		check_id=f"statistical_drift:{column_name}",
+		check_id=check_identifier(contract_id, column_name, "statistical_drift"),
 		column_name=column_name,
 		check_type="statistical_drift",
 		status=status,
-		actual_value={
-			"current_mean": round(current_mean, 6),
-			"z_score": round(z_score, 6) if z_score != float("inf") else "inf",
-		},
-		expected={"baseline_mean": baseline_mean, "stddev": baseline_stddev},
+		actual_value=actual_value,
+		expected=expected_value,
+		records_failing=int(len(numeric_series.index)) if status in {"FAIL", "WARNING"} else 0,
+		sample_failing=numeric_series.astype(str).tolist()[:5] if status in {"FAIL", "WARNING"} else [],
 		severity=severity,
 		message=message,
 	)
@@ -534,11 +659,19 @@ def validate_drift(frame: pd.DataFrame, column_name: str, baselines: dict[str, d
 
 def validate_contract(contract: dict[str, Any], frame: pd.DataFrame) -> list[dict[str, Any]]:
 	results: list[dict[str, Any]] = []
+	contract_identifier = contract_id_from_contract(contract, Path("contract.yaml"))
 	fields = extract_fields(contract)
-	baselines = load_baselines()
+	for field in fields:
+		field["_contract_id"] = contract_identifier
+	baselines = load_baselines(contract_identifier)
 	if not baselines:
-		baselines = build_baselines(frame)
-		save_baselines(baselines)
+		baselines = build_baselines(frame, fields, contract_identifier)
+		save_baselines(contract_identifier, baselines)
+	else:
+		for baseline in baselines.values():
+			baseline.setdefault("_contract_id", contract_identifier)
+
+	numeric_fields_for_drift = numeric_contract_columns(frame, fields)
 
 	for field in fields:
 		if field.get("required"):
@@ -554,12 +687,12 @@ def validate_contract(contract: dict[str, Any], frame: pd.DataFrame) -> list[dic
 		if range_result is not None:
 			results.append(range_result)
 
-	for column_name in numeric_column_names(frame):
+	for column_name in numeric_fields_for_drift:
 		drift_result = validate_drift(frame, column_name, baselines)
 		if drift_result is not None:
 			results.append(drift_result)
 
-	for column_name in sorted(set(baselines.keys()) - set(frame.columns)):
+	for column_name in sorted(set(baselines.keys()) - set(numeric_fields_for_drift)):
 		drift_result = validate_drift(frame, column_name, baselines)
 		if drift_result is not None:
 			results.append(drift_result)
@@ -574,7 +707,8 @@ def build_report(
 	results: list[dict[str, Any]],
 ) -> dict[str, Any]:
 	failed = sum(1 for result in results if result["status"] == "FAIL")
-	warned = sum(1 for result in results if result["status"] == "WARN")
+	warned = sum(1 for result in results if result["status"] == "WARNING")
+	errored = sum(1 for result in results if result["status"] == "ERROR")
 	passed = sum(1 for result in results if result["status"] == "PASS")
 	return {
 		"report_id": str(uuid.uuid4()),
@@ -585,6 +719,7 @@ def build_report(
 		"passed": passed,
 		"failed": failed,
 		"warned": warned,
+		"errored": errored,
 		"results": results,
 	}
 

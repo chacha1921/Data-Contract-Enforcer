@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-04-04T22:32:54.972458+00:00",
+  "report_date": "2026-04-05",
+  "data_health_score": {
+    "score": 100,
+    "narrative": "Data health is 100/100; all monitored checks passed and no critical violations reduced the score.",
+    "checks_passed": 87,
+    "total_checks": 87,
+    "critical_violations": 0,
+    "raw_score": 100.0
+  },
+  "violations_this_week": {
+    "count_by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "WARNING": 0,
+      "LOW": 0
+    },
+    "most_significant": []
+  },
+  "schema_changes_detected": [],
+  "ai_system_risk_assessment": {
+    "status": "BASELINE_SET",
+    "narrative": "AI systems are currently consuming reliable data; embedding drift is within threshold and the LLM output schema violation rate is stable.",
+    "ai_system_reliable": true,
+    "embedding_drift_within_threshold": true,
+    "embedding_drift_score": 0.0327,
+    "embedding_threshold": 0.15,
+    "prompt_input_validation_status": "PASS",
+    "prompt_invalid_records": 0,
+    "output_schema_violation_rate": 0.0,
+    "output_schema_violation_trend": "stable",
+    "per_prompt_version": [
+      {
+        "prompt_version": "3.0.0",
+        "total_outputs": 1,
+        "schema_violations": 0,
+        "violation_rate": 0.0,
+        "baseline_rate": null,
+        "trend": "unknown",
+        "status": "PASS"
+      }
+    ]
+  },
+  "recommended_actions": [
+    "Update repos/week2/src or the Week 2 verdict producer to emit prompt_version so output schema violation rate can be tracked per prompt version instead of falling back to rubric_version.",
+    "Update repos/week3/src to persist a canonical source_path alongside Week 3 extraction outputs so prompt input validation no longer relies on derived fallback metadata.",
+    "Run contracts/schema_analyzer.py for every contract snapshot directory on a scheduled cadence and feed the resulting schema_evolution_*.json outputs into contracts/report_generator.py before each release handoff."
+  ],
+  "source_artifacts": {
+    "validation_reports": "validation_reports",
+    "violation_log": "violation_log/violations.jsonl"
+  }
+}

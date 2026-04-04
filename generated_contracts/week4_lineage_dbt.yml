@@ -1,0 +1,30 @@
+version: 2
+models:
+- name: week4_lineage
+  description: Generated schema contract for week4-cartographer-lineage
+  columns:
+  - name: captured_at
+    description: Auto-generated from lineage_snapshots.jsonl
+    data_type: string
+    tests:
+    - not_null
+  - name: edges__source
+    description: Auto-generated from lineage_snapshots.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - week3_extractions
+        - week5_events
+  - name: edges__target
+    description: Auto-generated from lineage_snapshots.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - analytics_invoice_quality
+        - dbt_week3_extractions_model
+        - dbt_week5_events_model
+        - operations_event_dashboard

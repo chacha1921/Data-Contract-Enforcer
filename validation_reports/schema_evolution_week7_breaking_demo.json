@@ -1,0 +1,83 @@
+{
+  "contract_id": "week7-breaking-demo",
+  "analyzed_at": "2026-04-04T22:42:34.180446+00:00",
+  "since": null,
+  "snapshot_directory": "schema_snapshots/week7-breaking-demo",
+  "snapshots_analyzed": [
+    {
+      "previous_snapshot": "schema_snapshots/week7-breaking-demo/20260404_220000.yaml",
+      "current_snapshot": "schema_snapshots/week7-breaking-demo/20260404_221000.yaml"
+    }
+  ],
+  "summary": {
+    "comparisons_analyzed": 1,
+    "total_changes_detected": 3,
+    "breaking_comparisons": 1,
+    "compatibility_verdict": "BREAKING"
+  },
+  "comparisons": [
+    {
+      "previous_snapshot": "schema_snapshots/week7-breaking-demo/20260404_220000.yaml",
+      "current_snapshot": "schema_snapshots/week7-breaking-demo/20260404_221000.yaml",
+      "previous_captured_at": "2026-04-04T22:00:00+00:00",
+      "current_captured_at": "2026-04-04T22:10:00+00:00",
+      "change_count": 3,
+      "compatibility_verdict": "BREAKING",
+      "human_readable_diff": [
+        "Field amount changed from nullable to required.",
+        "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+        "Change type for amount from number to integer."
+      ],
+      "changes": [
+        {
+          "change_type": "add_required_field",
+          "compatibility": "BREAKING",
+          "summary": "Field amount changed from nullable to required.",
+          "human_diff": "Field amount changed from nullable to required.",
+          "required_action": "Coordinate with all producers. Provide default or migration script. Block deploy until all producers updated.",
+          "real_tool_handling": "Confluent BACKWARD mode: blocks.",
+          "details": {
+            "from": false,
+            "to": true
+          },
+          "field": "amount"
+        },
+        {
+          "change_type": "narrow_constraints",
+          "compatibility": "BREAKING",
+          "summary": "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+          "human_diff": "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+          "required_action": "Coordinate a migration window and confirm all subscribers can tolerate the narrower value range before deployment.",
+          "real_tool_handling": "Contract validation tools treat tighter bounds as breaking when existing payloads can fall outside the new range.",
+          "details": {
+            "from": {
+              "minimum": 0.0,
+              "maximum": 100.0
+            },
+            "to": {
+              "minimum": 10.0,
+              "maximum": 50.0
+            }
+          },
+          "field": "amount"
+        },
+        {
+          "change_type": "narrow_type",
+          "compatibility": "BREAKING",
+          "summary": "Change type for amount from number to integer.",
+          "human_diff": "Change type for amount from number to integer.",
+          "required_action": "CRITICAL. Requires migration plan with rollback. Registry blast radius report mandatory. Statistical baseline must be re-established after migration.",
+          "real_tool_handling": "Confluent FORWARD mode: blocks. Great Expectations: catches via distribution check.",
+          "details": {
+            "from": "number",
+            "to": "integer"
+          },
+          "field": "amount"
+        }
+      ]
+    }
+  ],
+  "migration_impact_reports": [
+    "validation_reports/migration_impact_week7_breaking_demo_20260404_221000.json"
+  ]
+}

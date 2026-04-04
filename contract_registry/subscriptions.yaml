@@ -1,59 +1,87 @@
 subscriptions:
-  - contract_id: week3_extractions
-    subscriber_id: week4_cartographer
+  - contract_id: week1-intent-records
+    subscriber_id: week2-digital-courtroom
+    subscriber_team: week2
+    fields_consumed:
+      - code_refs.file
+      - code_refs.symbol
+      - intent_id
+    breaking_fields:
+      - field: code_refs.file
+        reason: Week 2 verdict target_ref matching depends on target_ref resolving to a Week 1 code reference file.
+      - field: intent_id
+        reason: Intent-to-verdict linkage relies on stable intent identifiers.
+    validation_mode: AUDIT
+    registered_at: '2026-04-05T00:00:00Z'
+    contact: week2-team@org.com
+  - contract_id: week2-verdict-records
+    subscriber_id: week7-ai-contract-extension
+    subscriber_team: week7
+    fields_consumed:
+      - overall_verdict
+      - target_ref
+      - confidence
+      - overall_score
+    breaking_fields:
+      - field: overall_verdict
+        reason: LLM output schema validation relies on a stable verdict taxonomy.
+      - field: target_ref
+        reason: Output-schema validation checks the linkage back to upstream code references.
+    validation_mode: ENFORCE
+    registered_at: '2026-04-05T00:00:00Z'
+    contact: week7-team@org.com
+  - contract_id: week3-document-refinery-extractions
+    subscriber_id: week4-cartographer
+    subscriber_team: week4
     fields_consumed:
       - doc_id
-      - extracted_facts__confidence
+      - extracted_facts
       - source_doc_id
     breaking_fields:
-      - field: extracted_facts__confidence
+      - field: extracted_facts.confidence
         reason: Confidence drives downstream ranking and a 0.0-1.0 to 0-100 scale shift breaks ordering.
       - field: doc_id
         reason: Used as the primary identifier in downstream lineage and enrichment flows.
-    validation_mode: AUDIT
-    registered_at: '2026-04-04T00:00:00Z'
-    contact: week4-team@org.com
-  - contract_id: week3_extractions
-    subscriber_id: week6_contract_enforcer
-    fields_consumed:
-      - doc_id
-      - extracted_facts__confidence
-      - processed_at
-    breaking_fields:
-      - field: extracted_facts__confidence
-        reason: Validation rules enforce the confidence range and drift thresholds.
     validation_mode: ENFORCE
     registered_at: '2026-04-04T00:00:00Z'
-    contact: week6-team@org.com
-  - contract_id: week4_lineage_snapshots
-    subscriber_id: week6_contract_enforcer
+    contact: week4-team@org.com
+  - contract_id: week4-cartographer-lineage
+    subscriber_id: week7-violation-attributor
+    subscriber_team: week7
     fields_consumed:
       - captured_at
-      - edges__source
-      - edges__target
+      - edges.source
+      - edges.target
     breaking_fields:
-      - field: edges__target
+      - field: edges.target
         reason: Blast-radius enrichment depends on stable downstream node identities.
+      - field: edges.source
+        reason: Upstream-to-downstream traversal depends on stable lineage edge sources.
     validation_mode: AUDIT
-    registered_at: '2026-04-04T00:00:00Z'
-    contact: week6-team@org.com
-  - contract_id: week5_events
-    subscriber_id: week6_contract_enforcer
+    registered_at: '2026-04-05T00:00:00Z'
+    contact: week7-team@org.com
+  - contract_id: week5-ledger-events
+    subscriber_id: week7-schema-contract
+    subscriber_team: week7
     fields_consumed:
       - event_id
       - aggregate_id
       - event_type
       - occurred_at
+      - event_version
     breaking_fields:
       - field: event_type
         reason: Event-routing and contract clauses depend on stable event taxonomy.
+      - field: event_version
+        reason: Consumer event validation depends on stable event schema versions.
       - field: occurred_at
         reason: Temporal validation and lineage attribution rely on event timestamps.
     validation_mode: ENFORCE
-    registered_at: '2026-04-04T00:00:00Z'
-    contact: week6-team@org.com
-  - contract_id: outputs_traces_runs
-    subscriber_id: week6_contract_enforcer
+    registered_at: '2026-04-05T00:00:00Z'
+    contact: week7-team@org.com
+  - contract_id: langsmith-traces
+    subscriber_id: week7-ai-contract-extension
+    subscriber_team: week7
     fields_consumed:
       - run_type
       - total_tokens
@@ -62,6 +90,8 @@ subscriptions:
     breaking_fields:
       - field: total_cost
         reason: Cost observability depends on stable numeric trace fields.
+      - field: session_id
+        reason: Trace schema enforcement relies on stable trace/session correlation keys.
     validation_mode: AUDIT
-    registered_at: '2026-04-04T00:00:00Z'
-    contact: week6-team@org.com
+    registered_at: '2026-04-05T00:00:00Z'
+    contact: week7-team@org.com

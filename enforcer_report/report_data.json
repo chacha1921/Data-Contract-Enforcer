@@ -1,90 +1,101 @@
 {
-  "generated_at": "2026-04-04T21:04:31.483730+00:00",
-  "period": {
-    "start": "2026-04-01T23:08:49.419295+00:00",
-    "end": "2026-04-04T20:49:26.669248+00:00"
+  "generated_at": "2026-04-04T22:42:46.703051+00:00",
+  "report_date": "2026-04-05",
+  "data_health_score": {
+    "score": 100,
+    "narrative": "Data health is 100/100 after 87 of 87 checks passed, with 0 critical violations lowering trust in downstream data use.",
+    "checks_passed": 87,
+    "total_checks": 87,
+    "critical_violations": 0,
+    "raw_score": 100.0
   },
-  "data_health_score": 0,
-  "health_narrative": "Data health score is 0/100 after processing 38 severity-bearing findings across the validation reports. The current risk posture is driven primarily by 19 critical and 16 high-severity issues, with critical severity currently setting the stakeholder priority level.",
-  "top_violations": [
+  "violations_this_week": {
+    "count_by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 3,
+      "WARNING": 0,
+      "LOW": 0
+    },
+    "most_significant": [
+      {
+        "severity": "HIGH",
+        "system": "Week7 Breaking Demo",
+        "field": "amount",
+        "description": "Week7 Breaking Demo failed on field amount: Field amount changed from nullable to required; no registered downstream consumers were identified.",
+        "report_path": "validation_reports/schema_evolution_week7_breaking_demo.json"
+      },
+      {
+        "severity": "HIGH",
+        "system": "Week7 Breaking Demo",
+        "field": "amount",
+        "description": "Week7 Breaking Demo failed on field amount: Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0]; no registered downstream consumers were identified.",
+        "report_path": "validation_reports/schema_evolution_week7_breaking_demo.json"
+      },
+      {
+        "severity": "HIGH",
+        "system": "Week7 Breaking Demo",
+        "field": "amount",
+        "description": "Week7 Breaking Demo failed on field amount: Change type for amount from number to integer; no registered downstream consumers were identified.",
+        "report_path": "validation_reports/schema_evolution_week7_breaking_demo.json"
+      }
+    ]
+  },
+  "schema_changes_detected": [
     {
-      "contract_id": "week3_extractions",
-      "severity": "CRITICAL",
-      "field": "block_id",
-      "check_type": "format_uuid",
-      "source_report": "validation_reports/week3_extractions_runner_report.json",
-      "business_summary": "The 'block_id' field in Week 3 Extractions failed its uuid format check. Expected ^[0-9a-f-]{36}$ but found vision_text_1.",
-      "contract_path": "generated_contracts/week3_extractions.yaml",
-      "data_path": "outputs/week3/extractions.jsonl"
+      "contract_id": "week7-breaking-demo",
+      "summary": "Field amount changed from nullable to required.",
+      "compatibility_verdict": "BREAKING",
+      "required_action": "Coordinate with all producers. Provide default or migration script. Block deploy until all producers updated.",
+      "field": "amount",
+      "report_path": "validation_reports/schema_evolution_week7_breaking_demo.json"
     },
     {
-      "contract_id": "week3_extractions",
-      "severity": "CRITICAL",
-      "field": "doc_id",
-      "check_type": "format_uuid",
-      "source_report": "validation_reports/week3_extractions_runner_report.json",
-      "business_summary": "The 'doc_id' field in Week 3 Extractions failed its uuid format check. Expected ^[0-9a-f-]{36}$ but found 2013-E.C-Audit-finding-information. This impacts Used as the primary identifier in downstream lineage and enrichment flows., week6_contract_enforcer.",
-      "contract_path": "generated_contracts/week3_extractions.yaml",
-      "data_path": "outputs/week3/extractions.jsonl"
+      "contract_id": "week7-breaking-demo",
+      "summary": "Change numeric constraints for amount from [0.0, 100.0] to [10.0, 50.0].",
+      "compatibility_verdict": "BREAKING",
+      "required_action": "Coordinate a migration window and confirm all subscribers can tolerate the narrower value range before deployment.",
+      "field": "amount",
+      "report_path": "validation_reports/schema_evolution_week7_breaking_demo.json"
     },
     {
-      "contract_id": "week3_extractions",
-      "severity": "CRITICAL",
-      "field": "extracted_facts__value",
-      "check_type": "type_conformance",
-      "source_report": "validation_reports/week3_extractions_runner_report.json",
-      "business_summary": "The 'value' field in Week 3 Extractions contains values that do not match the agreed type. Expected number but found \u12a0\u1263\u122a 3. \u12e8\u12a6\u12f2\u1275 \u130d\u129d\u1275 \u1218\u1228\u1303 \u12a0\u1218\u120b\u12ab\u127d \u1218\u1228\u1303 \u1230\u132a\u12cd\u1361- \u12e8\u12a2\u1275\u12ee\u1335\u12eb \u12a2\u1295\u1268\u1235\u1275\u1218\u1295\u1275 \u12ae\u121a\u123d\u1295 \u12a6\u12f2\u1275 \u1270\u12f0\u122b\u130a\u1361- \u12e8\u12a2\u1275\u12ee\u1335\u12eb \u12a2\u1295\u1268\u1235\u1275\u1218\u1295\u1275 \u12ae\u121a\u123d\u1295 \u12a6\u12f2\u1275 \u12e8\u1270\u12f0\u1228\u1308\u12cd \u12e8\u1260\u1300\u1275 \u12d3\u1218\u1275\u1361- 2011 \u12e8....",
-      "contract_path": "generated_contracts/week3_extractions.yaml",
-      "data_path": "outputs/week3/extractions.jsonl"
-    },
-    {
-      "contract_id": "week3_extractions",
-      "severity": "CRITICAL",
-      "field": "processed_at",
-      "check_type": "type_conformance",
-      "source_report": "validation_reports/week3_extractions_runner_report.json",
-      "business_summary": "The 'processed_at' field in Week 3 Extractions contains values that do not match the agreed type. Expected string but found 2026-03-07T20:02:37.191264. This impacts week6_contract_enforcer.",
-      "contract_path": "generated_contracts/week3_extractions.yaml",
-      "data_path": "outputs/week3/extractions.jsonl"
-    },
-    {
-      "contract_id": "week3_extractions",
-      "severity": "CRITICAL",
-      "field": "processed_at",
-      "check_type": "format_date-time",
-      "source_report": "validation_reports/week3_extractions_runner_report.json",
-      "business_summary": "The 'processed_at' field in Week 3 Extractions failed its date time format check. Expected datetime.fromisoformat() compatible but found 2026-03-07T20:02:37.191264. This impacts week6_contract_enforcer.",
-      "contract_path": "generated_contracts/week3_extractions.yaml",
-      "data_path": "outputs/week3/extractions.jsonl"
+      "contract_id": "week7-breaking-demo",
+      "summary": "Change type for amount from number to integer.",
+      "compatibility_verdict": "BREAKING",
+      "required_action": "CRITICAL. Requires migration plan with rollback. Registry blast radius report mandatory. Statistical baseline must be re-established after migration.",
+      "field": "amount",
+      "report_path": "validation_reports/schema_evolution_week7_breaking_demo.json"
     }
   ],
-  "ai_risk": {
-    "status": "PARTIAL",
-    "source": "validation_reports/embedding_drift.json",
-    "embedding_drift_score": null,
-    "embedding_status": "BASELINE_CREATED",
-    "llm_output_violation_rate": 0.0,
-    "llm_status": "BASELINE_CREATED",
-    "message": "AI Extensions metrics were assembled from individual report files."
+  "ai_system_risk_assessment": {
+    "status": "BASELINE_SET",
+    "narrative": "AI systems are currently consuming reliable data; embedding drift is within threshold and the LLM output schema violation rate is stable.",
+    "ai_system_reliable": true,
+    "embedding_drift_within_threshold": true,
+    "embedding_drift_score": 0.0327,
+    "embedding_threshold": 0.15,
+    "prompt_input_validation_status": "PASS",
+    "prompt_invalid_records": 0,
+    "output_schema_violation_rate": 0.0,
+    "output_schema_violation_trend": "stable",
+    "per_prompt_version": [
+      {
+        "prompt_version": "3.0.0",
+        "total_outputs": 1,
+        "schema_violations": 0,
+        "violation_rate": 0.0,
+        "baseline_rate": null,
+        "trend": "unknown",
+        "status": "PASS"
+      }
+    ]
   },
-  "recommendations": [
-    {
-      "priority": 1,
-      "contract_id": "week3_extractions",
-      "action": "Review contract week3_extractions for field 'block_id' in generated_contracts/week3_extractions.yaml, align the producer data in outputs/week3/extractions.jsonl, and rerun the failing checks captured in validation_reports/week3_extractions_runner_report.json",
-      "reason": "The 'block_id' field in Week 3 Extractions failed its uuid format check. Expected ^[0-9a-f-]{36}$ but found vision_text_1."
-    },
-    {
-      "priority": 2,
-      "contract_id": "week3_extractions",
-      "action": "Review contract week3_extractions for field 'doc_id' in generated_contracts/week3_extractions.yaml, align the producer data in outputs/week3/extractions.jsonl, and rerun the failing checks captured in validation_reports/week3_extractions_runner_report.json",
-      "reason": "The 'doc_id' field in Week 3 Extractions failed its uuid format check. Expected ^[0-9a-f-]{36}$ but found 2013-E.C-Audit-finding-information. This impacts Used as the primary identifier in downstream lineage and enrichment flows., week6_contract_enforcer."
-    },
-    {
-      "priority": 3,
-      "contract_id": "week3_extractions",
-      "action": "Review contract week3_extractions for field 'value' in generated_contracts/week3_extractions.yaml, align the producer data in outputs/week3/extractions.jsonl, and rerun the failing checks captured in validation_reports/week3_extractions_runner_report.json",
-      "reason": "The 'value' field in Week 3 Extractions contains values that do not match the agreed type. Expected number but found \u12a0\u1263\u122a 3. \u12e8\u12a6\u12f2\u1275 \u130d\u129d\u1275 \u1218\u1228\u1303 \u12a0\u1218\u120b\u12ab\u127d \u1218\u1228\u1303 \u1230\u132a\u12cd\u1361- \u12e8\u12a2\u1275\u12ee\u1335\u12eb \u12a2\u1295\u1268\u1235\u1275\u1218\u1295\u1275 \u12ae\u121a\u123d\u1295 \u12a6\u12f2\u1275 \u1270\u12f0\u122b\u130a\u1361- \u12e8\u12a2\u1275\u12ee\u1335\u12eb \u12a2\u1295\u1268\u1235\u1275\u1218\u1295\u1275 \u12ae\u121a\u123d\u1295 \u12a6\u12f2\u1275 \u12e8\u1270\u12f0\u1228\u1308\u12cd \u12e8\u1260\u1300\u1275 \u12d3\u1218\u1275\u1361- 2011 \u12e8...."
-    }
-  ]
+  "recommended_actions": [
+    "Update outputs to restore field amount to the expected shape required by contract week7-breaking-demo.",
+    "Update repos/week2/src or the Week 2 verdict producer to emit prompt_version so output schema violation rate can be tracked per prompt version instead of falling back to rubric_version.",
+    "Update repos/week3/src to persist a canonical source_path alongside Week 3 extraction outputs so prompt input validation no longer relies on derived fallback metadata."
+  ],
+  "source_artifacts": {
+    "validation_reports": "validation_reports",
+    "violation_log": "violation_log/violations.jsonl"
+  }
 }

@@ -1,0 +1,218 @@
+kind: DataContract
+apiVersion: v3.0.0
+dataContractSpecification: 1.1.0
+id: langsmith-traces
+info:
+  title: LangSmith Traces — Runs
+  version: 1.0.0
+  description: Operational trace export summarizing AI run metadata, token usage,
+    and cost.
+  owner: week7-team
+servers:
+  local:
+    type: local
+    path: outputs/traces/runs.jsonl
+    format: jsonl
+terms:
+  usage: Internal observability contract.
+  limitations: Token counts and cost metrics must remain numeric for monitoring and
+    reporting.
+schema:
+  run_type:
+    type: string
+    required: true
+    description: 'run_type represented as string. Null fraction 0.000; distinct values
+      1. Sample values: baseline.'
+    metrics: &id001
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAAA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id002
+    - baseline
+    downstream_consumers:
+    - week7-ai-contract-extension
+  session_id:
+    type: string
+    required: true
+    description: 'session_id represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: week7-baseline-session.'
+    metrics: &id003
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAA9-AAAAAAAA-AAAAAAA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id004
+    - week7-baseline-session
+    downstream_consumers:
+    - week7-ai-contract-extension
+    unique: true
+  source:
+    type: string
+    required: true
+    description: 'source represented as string. Null fraction 0.000; distinct values
+      1. Sample values: synthetic_bootstrap.'
+    metrics: &id005
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: AAAAAAAAA_AAAAAAAAA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id006
+    - synthetic_bootstrap
+    downstream_consumers: []
+  total_cost:
+    type: integer
+    required: true
+    description: 'total_cost represented as integer. Null fraction 0.000; distinct
+      values 1. Sample values: 0.0. Observed range 0.0 to 0.0; mean 0.0; p25 0.0;
+      p50 0.0; p75 0.0; std 0.0; p95 0.0; p99 0.0.'
+    metrics: &id007
+      dtype: float64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      p25: 0.0
+      p50: 0.0
+      p75: 0.0
+      std: 0.0
+      p95: 0.0
+      p99: 0.0
+    minimum: 0.0
+    maximum: 0.0
+    downstream_consumers:
+    - week7-ai-contract-extension
+  total_tokens:
+    type: integer
+    required: true
+    description: 'total_tokens represented as integer. Null fraction 0.000; distinct
+      values 1. Sample values: 0. Observed range 0.0 to 0.0; mean 0.0; p25 0.0; p50
+      0.0; p75 0.0; std 0.0; p95 0.0; p99 0.0.'
+    metrics: &id008
+      dtype: int64
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: null
+      min: 0.0
+      max: 0.0
+      mean: 0.0
+      p25: 0.0
+      p50: 0.0
+      p75: 0.0
+      std: 0.0
+      p95: 0.0
+      p99: 0.0
+    minimum: 0.0
+    maximum: 0.0
+    downstream_consumers:
+    - week7-ai-contract-extension
+quality:
+  type: SodaChecks
+  specification:
+    checks for langsmith_traces:
+    - '- row_count >= 1'
+    - '- missing_count(run_type) = 0'
+    - '- missing_count(session_id) = 0'
+    - '- missing_count(source) = 0'
+    - '- missing_count(total_cost) = 0'
+    - '- min(total_cost) >= 0.0'
+    - '- max(total_cost) <= 0.0'
+    - '- missing_count(total_tokens) = 0'
+    - '- min(total_tokens) >= 0.0'
+    - '- max(total_tokens) <= 0.0'
+lineage:
+  source: outputs/traces/runs.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  upstream: []
+  downstream:
+  - id: week7-ai-contract-extension
+    description: Cost observability depends on stable numeric trace fields.; Trace
+      schema enforcement relies on stable trace/session correlation keys.
+    fields_consumed:
+    - run_type
+    - total_tokens
+    - total_cost
+    - session_id
+    breaking_if_changed:
+    - total_cost
+    - session_id
+    validation_mode: AUDIT
+  downstream_consumers_from_graph: []
+profiling:
+  engine: ydata-profiling
+  columns_profiled: 5
+  rows_profiled: 1
+  generated: true
+llm_annotations:
+- field: source
+  plain_english_description: 'source represented as string. Null fraction 0.000; distinct
+    values 1. Sample values: synthetic_bootstrap.'
+  validation_expression: source must remain semantically consistent within contract
+    langsmith-traces.
+  cross_column_relationship: Review alongside adjacent metadata columns during contract
+    review.
+  source: heuristic_fallback
+models:
+- name: langsmith_traces
+  type: table
+  fields:
+  - name: run_type
+    type: string
+    required: true
+    description: 'run_type represented as string. Null fraction 0.000; distinct values
+      1. Sample values: baseline.'
+    metrics: *id001
+    enum: *id002
+  - name: session_id
+    type: string
+    required: true
+    description: 'session_id represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: week7-baseline-session.'
+    metrics: *id003
+    enum: *id004
+  - name: source
+    type: string
+    required: true
+    description: 'source represented as string. Null fraction 0.000; distinct values
+      1. Sample values: synthetic_bootstrap.'
+    metrics: *id005
+    enum: *id006
+  - name: total_cost
+    type: integer
+    required: true
+    description: 'total_cost represented as integer. Null fraction 0.000; distinct
+      values 1. Sample values: 0.0. Observed range 0.0 to 0.0; mean 0.0; p25 0.0;
+      p50 0.0; p75 0.0; std 0.0; p95 0.0; p99 0.0.'
+    metrics: *id007
+    minimum: 0.0
+    maximum: 0.0
+  - name: total_tokens
+    type: integer
+    required: true
+    description: 'total_tokens represented as integer. Null fraction 0.000; distinct
+      values 1. Sample values: 0. Observed range 0.0 to 0.0; mean 0.0; p25 0.0; p50
+      0.0; p75 0.0; std 0.0; p95 0.0; p99 0.0.'
+    metrics: *id008
+    minimum: 0.0
+    maximum: 0.0

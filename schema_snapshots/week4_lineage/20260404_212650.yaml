@@ -1,0 +1,121 @@
+kind: DataContract
+apiVersion: v3.0.0
+dataContractSpecification: 1.1.0
+id: week4_lineage
+info:
+  title: Week 4 Cartographer — Lineage Snapshots
+  version: 1.0.0
+  description: Lineage graph snapshots used for downstream impact analysis and blast-radius
+    enrichment.
+  owner: week4-team
+servers:
+  local:
+    type: local
+    path: outputs/week4/lineage_snapshots.jsonl
+    format: jsonl
+terms:
+  usage: Internal lineage enrichment contract.
+  limitations: Edge source and target identifiers must remain stable between snapshots.
+schema:
+  captured_at:
+    type: string
+    required: true
+    description: 'captured_at represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: 2026-04-04T19:40:26.094009Z.'
+    metrics: &id001
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 1
+      dominant_character_pattern: 9999-99-99A99:99:99.999999A
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    format: date-time
+  edges:
+    type: array
+    description: 'Collection field edges exploded for profiling and represented as
+      array items. Item fields: source, target.'
+    items: &id002
+      type: object
+      fields:
+      - name: source
+        type: string
+        required: true
+        description: 'source represented as string. Null fraction 0.000; distinct
+          values 2. Sample values: week3_extractions, week5_events.'
+        metrics:
+          dtype: object
+          null_fraction: 0.0
+          cardinality: 2
+          dominant_character_pattern: AAAA9_AAAAAAAAAAA
+          min: null
+          max: null
+          mean: null
+          std: null
+          p95: null
+          p99: null
+        enum:
+        - week3_extractions
+        - week5_events
+      - name: target
+        type: string
+        required: true
+        description: 'target represented as string. Null fraction 0.000; distinct
+          values 4. Sample values: analytics_invoice_quality, dbt_week3_extractions_model,
+          operations_event_dashboard.'
+        metrics:
+          dtype: object
+          null_fraction: 0.0
+          cardinality: 4
+          dominant_character_pattern: AAAAAAAAA_AAAAAAA_AAAAAAA
+          min: null
+          max: null
+          mean: null
+          std: null
+          p95: null
+          p99: null
+        enum:
+        - analytics_invoice_quality
+        - dbt_week3_extractions_model
+        - dbt_week5_events_model
+        - operations_event_dashboard
+quality:
+  type: SodaChecks
+  specification:
+    checks for week4_lineage:
+    - '- row_count >= 1'
+    - '- missing_count(captured_at) = 0'
+    - '- missing_count(edges__source) = 0'
+    - '- missing_count(edges__target) = 0'
+lineage:
+  source: outputs/week4/lineage_snapshots.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  registry_subscribers_source: contract_registry/subscriptions.yaml
+  downstream_nodes_from_lineage_source: outputs/week4/lineage_snapshots.jsonl
+  downstream_nodes_from_lineage: []
+  registry_subscribers:
+  - week6_contract_enforcer
+  note: registry_subscribers come from subscriptions.yaml and drive blast-radius decisions.
+    downstream_nodes_from_lineage come from the Week 4 lineage snapshot and are enrichment
+    only.
+llm_annotations: []
+models:
+- name: week4_lineage
+  type: table
+  fields:
+  - name: captured_at
+    type: string
+    required: true
+    description: 'captured_at represented as string. Null fraction 0.000; distinct
+      values 1. Sample values: 2026-04-04T19:40:26.094009Z.'
+    metrics: *id001
+    format: date-time
+  - name: edges
+    type: array
+    description: 'Collection field edges exploded for profiling and represented as
+      array items. Item fields: source, target.'
+    items: *id002

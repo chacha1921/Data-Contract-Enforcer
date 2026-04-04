@@ -1,20 +1,57 @@
 {
-  "columns": {
-    "extracted_facts__confidence": {
-      "mean": 0.841667,
-      "stddev": 0.061215,
-      "row_count": 180
+  "contracts": {
+    "week3-document-refinery-extractions": {
+      "extracted_facts__confidence": {
+        "mean": 0.90023,
+        "stddev": 0.003384,
+        "row_count": 652,
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "language_confidence": {
+        "mean": 0.99954,
+        "stddev": 0.006768,
+        "row_count": 652,
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "page_number": {
+        "mean": 29.455521,
+        "stddev": 15.604767,
+        "row_count": 652,
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "processing_time_seconds": {
+        "mean": 38.654868,
+        "stddev": 1.704213,
+        "row_count": 652,
+        "_contract_id": "week3-document-refinery-extractions"
+      },
+      "text_length": {
+        "mean": 121.084356,
+        "stddev": 186.995023,
+        "row_count": 652,
+        "_contract_id": "week3-document-refinery-extractions"
+      }
     },
-    "extracted_facts__fact_index": {
-      "mean": 1.0,
-      "stddev": 0.816497,
-      "row_count": 180
-    },
-    "extracted_facts__value": {
-      "mean": 341.25,
-      "stddev": 129.885767,
-      "row_count": 60
+    "week5-ledger-events": {
+      "event_version": {
+        "mean": 1.017529,
+        "stddev": 0.131232,
+        "row_count": 1198,
+        "_contract_id": "week5-ledger-events"
+      },
+      "requested_amount_usd": {
+        "mean": 1883931.034483,
+        "stddev": 1384340.672917,
+        "row_count": 29,
+        "_contract_id": "week5-ledger-events"
+      },
+      "sequence_number": {
+        "mean": 5.335559,
+        "stddev": 3.242444,
+        "row_count": 1198,
+        "_contract_id": "week5-ledger-events"
+      }
     }
   },
-  "created_at": "2026-04-01T23:08:49.393627+00:00"
+  "created_at": "2026-04-04T22:05:52.626008+00:00"
 }

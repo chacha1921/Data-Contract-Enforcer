@@ -1,0 +1,39 @@
+version: 2
+models:
+- name: langsmith_traces
+  description: Generated schema contract for langsmith-traces
+  columns:
+  - name: run_type
+    description: Auto-generated from runs.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - baseline
+  - name: session_id
+    description: Auto-generated from runs.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - week7-baseline-session
+  - name: source
+    description: Auto-generated from runs.jsonl
+    data_type: string
+    tests:
+    - not_null
+    - accepted_values:
+        values:
+        - synthetic_bootstrap
+  - name: total_cost
+    description: Auto-generated from runs.jsonl
+    data_type: integer
+    tests:
+    - not_null
+  - name: total_tokens
+    description: Auto-generated from runs.jsonl
+    data_type: integer
+    tests:
+    - not_null

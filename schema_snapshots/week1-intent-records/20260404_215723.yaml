@@ -1,0 +1,342 @@
+kind: DataContract
+apiVersion: v3.0.0
+dataContractSpecification: 1.1.0
+id: week1-intent-records
+info:
+  title: Week 1 Intent Records
+  version: 1.0.0
+  description: Intent classification records emitted from the Week 1 orchestration
+    output.
+  owner: week1-team
+servers:
+  local:
+    type: local
+    path: outputs/week1/intent_records.jsonl
+    format: jsonl
+terms:
+  usage: Internal workflow orchestration data contract.
+  limitations: Intent labels and source references must remain stable for downstream
+    workflow routing.
+schema:
+  created_at:
+    type: string
+    required: true
+    description: 'created_at represented as string. Null fraction 0.000; distinct
+      values 4. Sample values: 2026-02-21T09:15:00Z, 2026-02-21T10:00:00Z, 2026-02-21T11:00:00Z.'
+    metrics: &id001
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 4
+      dominant_character_pattern: 9999-99-99A99:99:99A
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    format: date-time
+    downstream_consumers: []
+  description:
+    type: string
+    required: true
+    description: 'description represented as string. Null fraction 0.000; distinct
+      values 4. Sample values: Fix session token validation race condition, Standardize
+      User and Subscriber types, Implement Stripe Webhook Handler.'
+    metrics: &id002
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 4
+      dominant_character_pattern: AAA AAAAAAA AAAAA AAAAAAAAAA AAAA AAAAAAAAA
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id003
+    - Add Subscription Management UI
+    - Fix session token validation race condition
+    - Implement Stripe Webhook Handler
+    - Standardize User and Subscriber types
+    downstream_consumers: []
+  governance_tags:
+    type: string
+    required: true
+    description: 'governance_tags represented as string. Null fraction 0.000; distinct
+      values 4. Sample values: ["auth", "api", "engineering"], ["billing", "pii",
+      "types", "engineering"], ["auth", "billing", "pii", "security", "data"....'
+    metrics: &id004
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 4
+      dominant_character_pattern: '["AAAA", "AAA", "AAAAAAAAAAA"]'
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id005
+    - '["auth", "api", "engineering"]'
+    - '["auth", "billing", "pii", "security", "data", "api"]'
+    - '["billing", "pii", "types", "engineering"]'
+    - '["billing"]'
+    downstream_consumers: []
+  intent_id:
+    type: string
+    required: true
+    description: 'intent_id represented as string. Null fraction 0.000; distinct values
+      4. Sample values: 9389a099-5f7b-43e1-9b34-cb6cb1a69741, 2da242fb-3d90-4d43-b716-0644d0ea96e6,
+      90e41877-eb5e-4765-94ac-725c830d7027.'
+    metrics: &id006
+      dtype: object
+      null_fraction: 0.0
+      cardinality: 4
+      dominant_character_pattern: 9999A999-9A9A-99A9-9A99-AA9AA9A99999
+      min: null
+      max: null
+      mean: null
+      std: null
+      p95: null
+      p99: null
+    enum: &id007
+    - 2a5fd6b3-6088-462e-bc5f-0b42508b063c
+    - 2da242fb-3d90-4d43-b716-0644d0ea96e6
+    - 90e41877-eb5e-4765-94ac-725c830d7027
+    - 9389a099-5f7b-43e1-9b34-cb6cb1a69741
+    format: uuid
+    downstream_consumers:
+    - week2-digital-courtroom
+  code_refs:
+    type: array
+    description: 'Collection field code_refs exploded for profiling and represented
+      as array items. Item fields: confidence, file, line_end, line_start, symbol.'
+    items:
+      confidence:
+        type: number
+        required: true
+        description: Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking
+          change.
+        metrics: &id008
+          dtype: float64
+          null_fraction: 0.0
+          cardinality: 2
+          dominant_character_pattern: null
+          min: 0.56
+          max: 0.82
+          mean: 0.755
+          p25: 0.755
+          p50: 0.82
+          p75: 0.82
+          std: 0.112583
+          p95: 0.82
+          p99: 0.82
+        minimum: 0.0
+        maximum: 1.0
+      file:
+        type: string
+        required: true
+        description: 'file represented as string. Null fraction 0.000; distinct values
+          12. Sample values: src/services/mdm/MdmService.ts, src/services/tree-sitter/markdownParser.ts,
+          src/services/tree-sitter/languageParser.ts.'
+        metrics: &id009
+          dtype: object
+          null_fraction: 0.0
+          cardinality: 12
+          dominant_character_pattern: AAA/AAAAAAAA/AAAA-AAAAAA/AAAAAAAAAAAAAA.AA
+          min: null
+          max: null
+          mean: null
+          std: null
+          p95: null
+          p99: null
+      line_end:
+        type: integer
+        required: true
+        description: 'line_end represented as integer. Null fraction 0.000; distinct
+          values 8. Sample values: 11, 12, 33. Observed range 1.0 to 96.0; mean 15.4375;
+          p25 2.5; p50 10.0; p75 12.0; std 22.931879; p95 48.75; p99 86.55.'
+        metrics: &id010
+          dtype: int64
+          null_fraction: 0.0
+          cardinality: 8
+          dominant_character_pattern: null
+          min: 1.0
+          max: 96.0
+          mean: 15.4375
+          p25: 2.5
+          p50: 10.0
+          p75: 12.0
+          std: 22.931879
+          p95: 48.75
+          p99: 86.55
+        minimum: 1.0
+        maximum: 96.0
+      line_start:
+        type: integer
+        required: true
+        description: 'line_start represented as integer. Null fraction 0.000; distinct
+          values 8. Sample values: 11, 12, 33. Observed range 1.0 to 96.0; mean 15.4375;
+          p25 2.5; p50 10.0; p75 12.0; std 22.931879; p95 48.75; p99 86.55.'
+        metrics: &id011
+          dtype: int64
+          null_fraction: 0.0
+          cardinality: 8
+          dominant_character_pattern: null
+          min: 1.0
+          max: 96.0
+          mean: 15.4375
+          p25: 2.5
+          p50: 10.0
+          p75: 12.0
+          std: 22.931879
+          p95: 48.75
+          p99: 86.55
+        minimum: 1.0
+        maximum: 96.0
+      symbol:
+        type: string
+        required: true
+        description: 'symbol represented as string. Null fraction 0.000; distinct
+          values 12. Sample values: mdmConfigSchema, MockNode, LanguageParser.'
+        metrics: &id012
+          dtype: object
+          null_fraction: 0.0
+          cardinality: 12
+          dominant_character_pattern: AAAAAAA.AAA.AA
+          min: null
+          max: null
+          mean: null
+          std: null
+          p95: null
+          p99: null
+quality:
+  type: SodaChecks
+  specification:
+    checks for intent_records:
+    - '- row_count >= 1'
+    - '- missing_count(created_at) = 0'
+    - '- missing_count(description) = 0'
+    - '- missing_count(governance_tags) = 0'
+    - '- missing_count(intent_id) = 0'
+    - '- duplicate_count(intent_id) = 0'
+    - '- missing_count(code_refs__confidence) = 0'
+    - '- min(code_refs__confidence) >= 0.0'
+    - '- max(code_refs__confidence) <= 1.0'
+    - '- avg(code_refs__confidence) >= 0.0'
+    - '- avg(code_refs__confidence) <= 1.0'
+    - '- missing_count(code_refs__file) = 0'
+    - '- missing_count(code_refs__line_end) = 0'
+    - '- min(code_refs__line_end) >= 1.0'
+    - '- max(code_refs__line_end) <= 96.0'
+    - '- missing_count(code_refs__line_start) = 0'
+    - '- min(code_refs__line_start) >= 1.0'
+    - '- max(code_refs__line_start) <= 96.0'
+    - '- missing_count(code_refs__symbol) = 0'
+lineage:
+  source: outputs/week1/intent_records.jsonl
+  lineage_snapshot: outputs/week4/lineage_snapshots.jsonl
+  registry: contract_registry/subscriptions.yaml
+  upstream: []
+  downstream:
+  - id: week2-digital-courtroom
+    description: Week 2 verdict target_ref matching depends on target_ref resolving
+      to a Week 1 code reference file.; Intent-to-verdict linkage relies on stable
+      intent identifiers.
+    fields_consumed:
+    - code_refs.file
+    - code_refs.symbol
+    - intent_id
+    breaking_if_changed:
+    - code_refs.file
+    - intent_id
+    validation_mode: AUDIT
+  downstream_consumers_from_graph: []
+profiling:
+  engine: ydata-profiling
+  columns_profiled: 10
+  rows_profiled: 16
+  generated: true
+llm_annotations: []
+models:
+- name: intent_records
+  type: table
+  fields:
+  - name: created_at
+    type: string
+    required: true
+    description: 'created_at represented as string. Null fraction 0.000; distinct
+      values 4. Sample values: 2026-02-21T09:15:00Z, 2026-02-21T10:00:00Z, 2026-02-21T11:00:00Z.'
+    metrics: *id001
+    format: date-time
+  - name: description
+    type: string
+    required: true
+    description: 'description represented as string. Null fraction 0.000; distinct
+      values 4. Sample values: Fix session token validation race condition, Standardize
+      User and Subscriber types, Implement Stripe Webhook Handler.'
+    metrics: *id002
+    enum: *id003
+  - name: governance_tags
+    type: string
+    required: true
+    description: 'governance_tags represented as string. Null fraction 0.000; distinct
+      values 4. Sample values: ["auth", "api", "engineering"], ["billing", "pii",
+      "types", "engineering"], ["auth", "billing", "pii", "security", "data"....'
+    metrics: *id004
+    enum: *id005
+  - name: intent_id
+    type: string
+    required: true
+    description: 'intent_id represented as string. Null fraction 0.000; distinct values
+      4. Sample values: 9389a099-5f7b-43e1-9b34-cb6cb1a69741, 2da242fb-3d90-4d43-b716-0644d0ea96e6,
+      90e41877-eb5e-4765-94ac-725c830d7027.'
+    metrics: *id006
+    enum: *id007
+    format: uuid
+  - name: code_refs
+    type: array
+    description: 'Collection field code_refs exploded for profiling and represented
+      as array items. Item fields: confidence, file, line_end, line_start, symbol.'
+    items:
+      type: object
+      fields:
+      - name: confidence
+        type: number
+        required: true
+        description: Confidence score. MUST be float 0.0-1.0. 0-100 scale is a breaking
+          change.
+        metrics: *id008
+        minimum: 0.0
+        maximum: 1.0
+      - name: file
+        type: string
+        required: true
+        description: 'file represented as string. Null fraction 0.000; distinct values
+          12. Sample values: src/services/mdm/MdmService.ts, src/services/tree-sitter/markdownParser.ts,
+          src/services/tree-sitter/languageParser.ts.'
+        metrics: *id009
+      - name: line_end
+        type: integer
+        required: true
+        description: 'line_end represented as integer. Null fraction 0.000; distinct
+          values 8. Sample values: 11, 12, 33. Observed range 1.0 to 96.0; mean 15.4375;
+          p25 2.5; p50 10.0; p75 12.0; std 22.931879; p95 48.75; p99 86.55.'
+        metrics: *id010
+        minimum: 1.0
+        maximum: 96.0
+      - name: line_start
+        type: integer
+        required: true
+        description: 'line_start represented as integer. Null fraction 0.000; distinct
+          values 8. Sample values: 11, 12, 33. Observed range 1.0 to 96.0; mean 15.4375;
+          p25 2.5; p50 10.0; p75 12.0; std 22.931879; p95 48.75; p99 86.55.'
+        metrics: *id011
+        minimum: 1.0
+        maximum: 96.0
+      - name: symbol
+        type: string
+        required: true
+        description: 'symbol represented as string. Null fraction 0.000; distinct
+          values 12. Sample values: mdmConfigSchema, MockNode, LanguageParser.'
+        metrics: *id012

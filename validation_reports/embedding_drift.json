@@ -1,8 +1,13 @@
 {
   "check": "embedding_drift",
-  "status": "BASELINE_CREATED",
-  "message": "Embedding baseline did not exist and was created from the current sample.",
+  "status": "PASS",
+  "drift_score": 0.0327,
+  "threshold": 0.15,
   "sample_size": 200,
   "baseline": "/Users/chalielijalem/Documents/Tenx_MCP/week7/Data-Contract-Enforcer/schema_snapshots/embedding_baselines.npz",
-  "run_timestamp": "2026-04-04T21:03:54.394192+00:00"
+  "embedding_model": "text-embedding-3-small",
+  "monitored_field": "extracted_facts[*].text",
+  "resolved_source_field": "extracted_facts[*].value",
+  "run_timestamp": "2026-04-04T22:32:36.806422+00:00",
+  "message": "Embedding drift is within the acceptable threshold."
 }

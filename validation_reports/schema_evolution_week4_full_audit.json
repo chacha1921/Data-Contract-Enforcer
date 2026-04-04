@@ -1,0 +1,59 @@
+{
+  "contract_id": "week4-cartographer-lineage",
+  "analyzed_at": "2026-04-04T22:40:42.424027+00:00",
+  "since": "2026-04-04T21:53:00+00:00",
+  "snapshot_directory": "schema_snapshots/week4-cartographer-lineage",
+  "snapshots_analyzed": [
+    {
+      "previous_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215336.yaml",
+      "current_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215522.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215522.yaml",
+      "current_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215618.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215618.yaml",
+      "current_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215725.yaml"
+    }
+  ],
+  "summary": {
+    "comparisons_analyzed": 3,
+    "total_changes_detected": 0,
+    "breaking_comparisons": 0,
+    "compatibility_verdict": "COMPATIBLE"
+  },
+  "comparisons": [
+    {
+      "previous_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215336.yaml",
+      "current_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215522.yaml",
+      "previous_captured_at": "2026-04-04T21:53:36+00:00",
+      "current_captured_at": "2026-04-04T21:55:22+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215522.yaml",
+      "current_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215618.yaml",
+      "previous_captured_at": "2026-04-04T21:55:22+00:00",
+      "current_captured_at": "2026-04-04T21:56:18+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215618.yaml",
+      "current_snapshot": "schema_snapshots/week4-cartographer-lineage/20260404_215725.yaml",
+      "previous_captured_at": "2026-04-04T21:56:18+00:00",
+      "current_captured_at": "2026-04-04T21:57:25+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    }
+  ],
+  "migration_impact_reports": []
+}

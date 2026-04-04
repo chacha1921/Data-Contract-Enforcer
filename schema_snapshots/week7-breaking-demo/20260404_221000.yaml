@@ -1,0 +1,15 @@
+snapshot_version: '1.0'
+captured_at: '2026-04-04T22:10:00+00:00'
+contract_id: week7-breaking-demo
+info:
+  title: Week 7 Breaking Demo
+  version: 1.1.0
+schema:
+  id:
+    type: string
+    required: true
+  amount:
+    type: integer
+    required: true
+    minimum: 10.0
+    maximum: 50.0

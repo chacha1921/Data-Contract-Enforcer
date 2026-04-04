@@ -1,0 +1,59 @@
+{
+  "contract_id": "week5-ledger-events",
+  "analyzed_at": "2026-04-04T22:40:40.463438+00:00",
+  "since": "2026-04-04T21:53:00+00:00",
+  "snapshot_directory": "schema_snapshots/week5-ledger-events",
+  "snapshots_analyzed": [
+    {
+      "previous_snapshot": "schema_snapshots/week5-ledger-events/20260404_215336.yaml",
+      "current_snapshot": "schema_snapshots/week5-ledger-events/20260404_215522.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week5-ledger-events/20260404_215522.yaml",
+      "current_snapshot": "schema_snapshots/week5-ledger-events/20260404_215619.yaml"
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week5-ledger-events/20260404_215619.yaml",
+      "current_snapshot": "schema_snapshots/week5-ledger-events/20260404_215726.yaml"
+    }
+  ],
+  "summary": {
+    "comparisons_analyzed": 3,
+    "total_changes_detected": 0,
+    "breaking_comparisons": 0,
+    "compatibility_verdict": "COMPATIBLE"
+  },
+  "comparisons": [
+    {
+      "previous_snapshot": "schema_snapshots/week5-ledger-events/20260404_215336.yaml",
+      "current_snapshot": "schema_snapshots/week5-ledger-events/20260404_215522.yaml",
+      "previous_captured_at": "2026-04-04T21:53:36+00:00",
+      "current_captured_at": "2026-04-04T21:55:22+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week5-ledger-events/20260404_215522.yaml",
+      "current_snapshot": "schema_snapshots/week5-ledger-events/20260404_215619.yaml",
+      "previous_captured_at": "2026-04-04T21:55:22+00:00",
+      "current_captured_at": "2026-04-04T21:56:19+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    },
+    {
+      "previous_snapshot": "schema_snapshots/week5-ledger-events/20260404_215619.yaml",
+      "current_snapshot": "schema_snapshots/week5-ledger-events/20260404_215726.yaml",
+      "previous_captured_at": "2026-04-04T21:56:19+00:00",
+      "current_captured_at": "2026-04-04T21:57:26+00:00",
+      "change_count": 0,
+      "compatibility_verdict": "COMPATIBLE",
+      "human_readable_diff": [],
+      "changes": []
+    }
+  ],
+  "migration_impact_reports": []
+}
